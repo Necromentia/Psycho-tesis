@@ -6,6 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Iniciar sesión</title>
       <style>
+            /* Tus estilos CSS aquí */
             body {
                   display: flex;
                   align-items: center;
@@ -93,14 +94,15 @@
       <div class="main">
             <h1>Psycho-Diagnosis</h1>
             <h3>Ingrese sus datos de usuario</h3>
-            <form action="">
-                  <label for="email">
-                        Correo:
+            <form method="post" action="{% url 'inicio' %}">
+                  {% csrf_token %}
+                  <label for="username">
+                        Nombre de usuario:
                   </label>
                   <input type="text" 
-                         id="email" 
-                         name="email" 
-                         placeholder="Ingrese su correo" required>
+                         id="username" 
+                         name="username" 
+                         placeholder="Ingrese su nombre de usuario" required>
 
                   <label for="password">
                         Contraseña:
@@ -111,9 +113,34 @@
                          placeholder="Ingrese su contraseña" required>
 
                   <div class="wrap">
-                        <button type="submit"
-                                onclick="solve()">
+                        <button type="submit" name="login">
                               Iniciar sesión
+                        </button>
+                  </div>
+            </form>
+
+            <h3>Registrar un nuevo usuario</h3>
+            <form method="post" action="{% url 'inicio' %}">
+                  {% csrf_token %}
+                  <label for="new_username">
+                        Nombre de usuario:
+                  </label>
+                  <input type="text" 
+                         id="new_username" 
+                         name="new_username" 
+                         placeholder="Ingrese su nombre de usuario" required>
+
+                  <label for="new_password">
+                        Contraseña:
+                  </label>
+                  <input type="password"
+                         id="new_password" 
+                         name="new_password"
+                         placeholder="Ingrese su contraseña" required>
+
+                  <div class="wrap">
+                        <button type="submit" name="register">
+                              Crear cuenta
                         </button>
                   </div>
             </form>
@@ -121,9 +148,6 @@
             <div class="links">
                   <p>¿Olvidaste tu contraseña?
                         <a href="#">Recuperar contraseña</a>
-                  </p>
-                  <p>¿No estás registrado?
-                        <a href="#">Crea una cuenta</a>
                   </p>
             </div>
       </div>

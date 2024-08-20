@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -22,15 +21,15 @@ def inicio(request):
         
         elif 'register' in request.POST:
             # Proceso de registro
-            username = request.POST['username']
-            password = request.POST['password']
+            username = request.POST['new_username']
+            password = request.POST['new_password']
             if User.objects.filter(username=username).exists():
                 register_error = 'El nombre de usuario ya está en uso'
             else:
                 User.objects.create_user(username=username, password=password)
-                return redirect('login')
+                return redirect('inicio')  # Redirige al login después de crear el usuario
 
     return render(request, 'index.html', {'login_error': login_error, 'register_error': register_error})
 
 def home(request):
-    return render(request, 'home.html',)
+    return render(request, 'home.html')
