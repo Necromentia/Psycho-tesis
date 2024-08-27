@@ -1,20 +1,663 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
-</head>
-<body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="{% url 'logout' %}">Logout</a></li>
-            </ul>
-        </nav>
-    </header>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f0f4f8;
+        }
 
-    <h1>Welcome, {{ user.username }}!</h1>
+        .sidebar {
+            width: 20%;
+            background-color: #1f2937;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sidebar h2 {
+            margin: 0 0 20px;
+            font-size: 18px;
+            color: #f0f4f8;
+        }
+
+        .recent-patients {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #1f2937;
+        }
+
+        .recent-patients button {
+            padding: 10px;
+            background-color: #4e678b;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.3s ease;
+            color: #f0f4f8;
+        }
+
+        .recent-patients button:hover {
+            background-color: #181f2b;
+        }
+
+        .user-info-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .user-info {
+            padding: 10px;
+            background-color: #10b981;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background-color: #f0f0f0;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border-radius: 5px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        .user-info-container:hover .dropdown-content {
+            display: block;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            width: 60%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            color: #1f2937;
+        }
+
+        .button-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .add-patient-button {
+            padding: 10px 20px;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        .add-patient-button:hover {
+            background-color: #0f766e;
+        }
+
+        .icon-button {
+            padding: 10px;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            position: relative;
+            margin-left: 10px;
+        }
+
+        .dropdown-content-icon {
+            display: none;
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background-color: #f0f0f0;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border-radius: 5px;
+            overflow: hidden;
+            width: 150px;
+        }
+
+        .dropdown-content-icon a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .dropdown-content-icon a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content-icon a:hover {
+            background-color: #ddd;
+        }
+
+        .icon-button:hover .dropdown-content-icon {
+            display: block;
+        }
+
+        .folders-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .edit-bar {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .folders {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .folder {
+            background-color: #4e678b;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+            font-size: 18px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .folder:hover {
+            background-color: #181f2b;
+        }
+
+        .folder img {
+            width: 50px;
+            margin-bottom: 10px;
+        }
+
+        .folder span {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .folder .folder-count {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 14px;
+        }
+
+        .recent-patients-list {
+            margin-top: 20px;
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .recent-patients-list li {
+            background-color: #4e678b;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .recent-patients-list li:hover {
+            background-color: #181f2b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 30%;
+            border-radius: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .modal-button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            background-color: #10b981;
+            color: white;
+            width: 100%;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .modal-button:hover {
+            background-color: #0f766e;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-buttons button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .action-buttons .view-button {
+            background-color: #4e678b;
+        }
+
+        .action-buttons .edit-button {
+            background-color: #10b981;
+        }
+
+        .action-buttons .delete-button {
+            background-color: #e74c3c;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <div>
+            <h2>Ultimos pacientes vistos</h2>
+            <div class="recent-patients">
+                {% for patient in recent_patients %}
+                <button>{{ patient.first_name }} {{ patient.last_name }}</button>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="user-info-container">
+            <div class="user-info">{{ user.username }}</div>
+            <div class="dropdown-content">
+                <a href="#">Ajustes del usuario</a>
+                <a href="{% url 'logout' %}">Cerrar sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="search-bar">
+            <input type="text" placeholder="Buscar paciente...">
+            <div class="button-container">
+                <a href="{% url 'ingreso-paciente' %}" class="add-patient-button">Ingresar Paciente</a>
+                <div class="icon-button">
+                    ⚙
+                    <div class="dropdown-content-icon">
+                        <a href="#">Ajustes del usuario</a>
+                        <a href="{% url 'logout' %}">Cerrar sesión</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="folders-container">
+            <div class="edit-bar">
+                <div class="icon-button" id="edit-icon">
+                    ✏️
+                </div>
+            </div>
+
+            {% if folders %}
+            <div class="folders">
+                {% for folder in folders %}
+                <div class="folder" data-folder-id="{{ folder.id }}" data-folder-name="{{ folder.name }}">
+                    <span>{{ folder.name }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div id="actionModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Gestión de Carpetas</h2>
+            <button id="openCreateFolderModal" class="modal-button">Crear Carpeta</button>
+            <button id="openEditFolderModal" class="modal-button">Editar Carpeta</button>
+        </div>
+    </div>
+
+    <div id="createFolderModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Crear nueva carpeta</h2>
+            <form id="create-folder-form" method="POST">
+                {% csrf_token %}
+                <label for="folder_name">Nombre de la nueva carpeta:</label>
+                <input type="text" id="folder_name" name="folder_name" required>
+
+                <label for="patient_id">Vincular paciente:</label>
+                <select id="patient_id" name="patient_id">
+                    <option value="">--Seleccionar paciente--</option>
+                    {% for patient in unassigned_patients %}
+                    <option value="{{ patient.id }}">{{ patient.first_name }} {{ patient.last_name }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" name="create_folder">Crear carpeta</button>
+            </form>
+        </div>
+    </div>
+    <div id="editFolderModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Seleccionar carpeta para editar</h2>
+            <form id="select-folder-form" method="POST">
+                {% csrf_token %}
+                <label for="edit_folder_id">Seleccionar carpeta:</label>
+                <select id="edit_folder_id" name="folder_id" required>
+                    <option value="">--Seleccionar carpeta--</option>
+                    {% for folder in folders %}
+                    <option value="{{ folder.id }}">{{ folder.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" id="openEditActionsModal">Editar carpeta</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="editActionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Editar Carpeta</h2>
+            <form id="edit-folder-form" method="POST">
+                {% csrf_token %}
+                <input type="hidden" id="edit_folder_id_hidden" name="folder_id">
+
+                <label for="edit_folder_name">Nuevo nombre de la carpeta:</label>
+                <input type="text" id="edit_folder_name" name="folder_name">
+
+                <label for="edit_patient_id">Agregar paciente:</label>
+                <select id="edit_patient_id" name="patient_id">
+                    <option value="">--Seleccionar paciente--</option>
+                    {% for patient in unassigned_patients %}
+                    <option value="{{ patient.id }}">{{ patient.first_name }} {{ patient.last_name }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" name="edit_folder">Guardar cambios</button>
+                <button type="submit" name="delete_folder" id="delete-folder-button">Eliminar carpeta</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="viewPatientsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Pacientes en la Carpeta: <span id="folderName"></span></h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre Completo</th>
+                        <th>Género</th>
+                        <th>Fecha de Nacimiento</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="patientList">
+                    <!-- Aquí se insertarán los pacientes dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editButton = document.getElementById('edit-icon');
+            const actionModal = document.getElementById('actionModal');
+            const createFolderModal = document.getElementById('createFolderModal');
+            const editFolderModal = document.getElementById('editFolderModal');
+            const editActionsModal = document.getElementById('editActionsModal');
+            const viewPatientsModal = document.getElementById('viewPatientsModal');
+            const closeModalElements = document.getElementsByClassName('close');
+
+            const openCreateFolderModalButton = document.getElementById('openCreateFolderModal');
+            const openEditFolderModalButton = document.getElementById('openEditFolderModal');
+            const openEditActionsModalButton = document.getElementById('openEditActionsModal');
+            const editFolderIdHidden = document.getElementById('edit_folder_id_hidden');
+
+            // Mostrar el modal de acciones al hacer clic en el botón de editar
+            editButton.addEventListener('click', function () {
+                actionModal.style.display = 'block';
+            });
+
+            // Mostrar el modal de crear carpeta
+            openCreateFolderModalButton.addEventListener('click', function () {
+                actionModal.style.display = 'none';
+                createFolderModal.style.display = 'block';
+            });
+
+            // Mostrar el modal de seleccionar carpeta para editar
+            openEditFolderModalButton.addEventListener('click', function () {
+                actionModal.style.display = 'none';
+                editFolderModal.style.display = 'block';
+            });
+
+            // Mostrar el modal de acciones de edición al seleccionar una carpeta
+            openEditActionsModalButton.addEventListener('click', function () {
+                const selectedFolderId = document.getElementById('edit_folder_id').value;
+                if (selectedFolderId) {
+                    editFolderIdHidden.value = selectedFolderId; // Set hidden input value
+                    editFolderModal.style.display = 'none';
+                    editActionsModal.style.display = 'block';
+                } else {
+                    alert('Por favor, selecciona una carpeta para editar.');
+                }
+            });
+
+            // Función para abrir el modal y cargar los pacientes
+            function openFolder(folderId, folderName) {
+                const folderNameElement = document.getElementById('folderName');
+                const patientList = document.getElementById('patientList');
+
+                folderNameElement.textContent = folderName;
+
+                // Limpiar la lista de pacientes
+                patientList.innerHTML = '';
+
+                // Hacer una solicitud AJAX para obtener los pacientes de la carpeta
+                fetch(`/get_patients_by_folder/${folderId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.patients.forEach(patient => {
+                            const row = document.createElement('tr');
+
+                            row.innerHTML = `
+                                <td>${patient.id}</td>
+                                <td>${patient.first_name} ${patient.last_name}</td>
+                                <td>${patient.genre}</td>
+                                <td>${patient.birth_date}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="view-button">Ver</button>
+                                        <button class="edit-button">Editar</button>
+                                        <button class="delete-button">Eliminar</button>
+                                    </div>
+                                </td>
+                            `;
+
+                            patientList.appendChild(row);
+                        });
+
+                        viewPatientsModal.style.display = 'block';
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            // Asignar el evento de clic a cada carpeta
+            document.querySelectorAll('.folder').forEach(folder => {
+                folder.addEventListener('click', function () {
+                    const folderId = folder.getAttribute('data-folder-id');
+                    const folderName = folder.getAttribute('data-folder-name');
+                    openFolder(folderId, folderName);
+                });
+            });
+
+            // Cerrar los modales al hacer clic en la 'x'
+            Array.from(closeModalElements).forEach(element => {
+                element.addEventListener('click', function () {
+                    actionModal.style.display = 'none';
+                    createFolderModal.style.display = 'none';
+                    editFolderModal.style.display = 'none';
+                    editActionsModal.style.display = 'none';
+                    viewPatientsModal.style.display = 'none';
+                });
+            });
+
+            // Cerrar el modal si se hace clic fuera del contenido del modal
+            window.addEventListener('click', function (event) {
+                if (event.target === actionModal) {
+                    actionModal.style.display = 'none';
+                } else if (event.target === createFolderModal) {
+                    createFolderModal.style.display = 'none';
+                } else if (event.target === editFolderModal) {
+                    editFolderModal.style.display = 'none';
+                } else if (event.target === editActionsModal) {
+                    editActionsModal.style.display = 'none';
+                } else if (event.target === viewPatientsModal) {
+                    viewPatientsModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
 </body>
+
 </html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat con la IA</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            width: 90%;
+            max-width: 1200px;
+            height: 90%;
+            margin: auto;
+            justify-content: space-between; 
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 60%;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            margin-right: 20px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #f7f7f7;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .chat-history {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+
+        .chat-history .message {
+            margin-bottom: 15px;
+        }
+
+        .chat-history .user-message span,
+        .chat-history .bot-message span {
+            display: inline-block;
+            padding: 10px;
+            border-radius: 20px;
+            max-width: 70%;
+            white-space: pre-wrap;
+        }
+
+        .chat-history .user-message span {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .chat-history .bot-message span {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background-color: #f7f7f7;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input form {
+            display: flex;
+            width: 100%;
+        }
+
+        .chat-input textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background-color: #fff;
+            color: #333;
+            resize: none;
+            height: 50px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        .chat-input button:disabled {
+            background-color: #b0b0b0;
+            cursor: not-allowed;
+        }
+
+        .patient-info-container {
+            width: 35%;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .patient-info h3 {
+            margin-top: 0;
+        }
+
+        .diagnosis-input {
+            margin-top: 20px;
+        }
+
+        .diagnosis-input textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        .diagnosis-input button {
+            margin-top: 10px;
+            padding: 10px;
+            width: 100%;
+            border-radius: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .diagnosis-input button:hover {
+            background-color: #218838;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="chat-container">
+            <div class="chat-header">
+                Chat con la IA
+            </div>
+            <div class="chat-history" id="chat-history">
+            </div>
+            <div class="chat-input">
+                <form id="chat-form">
+                    {% csrf_token %}
+                    <textarea id="user_input" name="user_input" placeholder="Escribe tu mensaje..."></textarea>
+                    <button type="submit" id="send-button">Enviar</button>
+                </form>
+            </div>
+        </div>
+        <div class="patient-info-container">
+            <div class="patient-info">
+                <h3>Datos del Paciente</h3>
+                <div id="patient-data">
+                    <p><strong>Nombre:</strong> {{ patient_data.first_name }} {{ patient_data.last_name }}</p>
+                    <p><strong>Fecha de Nacimiento:</strong> {{ patient_data.birth_date }}</p>
+                    <p><strong>Género:</strong> {{ patient_data.genre }}</p>
+                    <h4>Síntomas</h4>
+                    <p><strong>Físicos:</strong> {{ patient_data.sintomas.fisicos }}</p>
+                    <p><strong>Sociales:</strong> {{ patient_data.sintomas.sociales }}</p>
+                    <p><strong>Emocionales:</strong> {{ patient_data.sintomas.emocionales }}</p>
+                    <p><strong>Comportamiento:</strong> {{ patient_data.sintomas.comportamiento }}</p>
+                    <h4>Diagnóstico Previo</h4>
+                    <p>{{ patient_data.diagnostico }}</p>
+                </div>
+            </div>
+            <div class="diagnosis-input">
+                <h4>Actualizar Diagnóstico</h4>
+                <textarea id="new_diagnosis" placeholder="Ingrese nuevo diagnóstico..."></textarea>
+                <button id="save-diagnosis">Guardar diagnóstico del paciente</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#chat-form').on('submit', function (event) {
+                event.preventDefault();
+                var user_input = $('#user_input').val();
+                var sendButton = $('#send-button');
+
+                sendButton.prop('disabled', true);
+
+                $.ajax({
+                    url: '{% url "chat" %}',
+                    method: 'POST',
+                    data: {
+                        'user_input': user_input,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        $('#chat-history').append('<div class="message user-message"><span>Tú: ' + user_input + '</span></div>');
+                        $('#chat-history').append('<div class="message bot-message"><span>IA: ' + data.response + '</span></div>');
+                        $('#user_input').val('');
+                        $('#chat-history').scrollTop($('#chat-history')[0].scrollHeight);
+
+                        sendButton.prop('disabled', false);
+                    },
+                    error: function (xhr, errmsg, err) {
+                        $('#chat-history').append('<div class="message bot-message"><span>Error al enviar el mensaje.</span></div>');
+
+                        sendButton.prop('disabled', false);
+                    }
+                });
+            });
+
+
+            $('#save-diagnosis').on('click', function () {
+              
+                var new_diagnosis = $('#new_diagnosis').val();
+
+                $.ajax({
+                    url: '{% url "update_diagnosis" %}', 
+                    method: 'POST',
+                    data: {
+                        'new_diagnosis': new_diagnosis,
+                        'patient_id': '{{ patient_data.id }}', 
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        alert('Diagnóstico actualizado correctamente');
+                    },
+                    error: function (xhr, errmsg, err) {
+                        alert('Error al guardar el diagnóstico');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
