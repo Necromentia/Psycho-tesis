@@ -25,7 +25,7 @@
             max-width: 1200px;
             height: 90%;
             margin: auto;
-            justify-content: space-between; 
+            justify-content: space-between;
         }
 
         .chat-container {
@@ -129,44 +129,70 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
             height: 100%;
             overflow-y: auto;
         }
 
         .patient-info h3 {
             margin-top: 0;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
         }
 
-        .diagnosis-input {
+        .patient-info p,
+        .patient-info label {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .patient-info strong {
+            font-weight: bold;
+        }
+
+        .diagnosis-section {
             margin-top: 20px;
         }
 
-        .diagnosis-input textarea {
+        .diagnosis-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .diagnosis-section input[type="text"],
+        .diagnosis-section textarea {
             width: 100%;
             padding: 10px;
-            border-radius: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
             border: 1px solid #ddd;
             box-sizing: border-box;
+        }
+
+        .diagnosis-section textarea {
             resize: vertical;
         }
 
-        .diagnosis-input button {
-            margin-top: 10px;
-            padding: 10px;
+        #save-diagnosis {
+            margin-top: 20px;
+            padding: 15px;
             width: 100%;
-            border-radius: 10px;
+            border-radius: 5px;
             background-color: #28a745;
             color: white;
             border: none;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
         }
 
-        .diagnosis-input button:hover {
+        #save-diagnosis:hover {
             background-color: #218838;
         }
-
     </style>
 </head>
 
@@ -177,6 +203,7 @@
                 Chat con la IA
             </div>
             <div class="chat-history" id="chat-history">
+                <!-- Aquí se irán mostrando los mensajes -->
             </div>
             <div class="chat-input">
                 <form id="chat-form">
@@ -193,19 +220,41 @@
                     <p><strong>Nombre:</strong> {{ patient_data.first_name }} {{ patient_data.last_name }}</p>
                     <p><strong>Fecha de Nacimiento:</strong> {{ patient_data.birth_date }}</p>
                     <p><strong>Género:</strong> {{ patient_data.genre }}</p>
+
                     <h4>Síntomas</h4>
                     <p><strong>Físicos:</strong> {{ patient_data.sintomas.fisicos }}</p>
                     <p><strong>Sociales:</strong> {{ patient_data.sintomas.sociales }}</p>
                     <p><strong>Emocionales:</strong> {{ patient_data.sintomas.emocionales }}</p>
                     <p><strong>Comportamiento:</strong> {{ patient_data.sintomas.comportamiento }}</p>
+
+                    <h4>Historial Médico</h4>
+                    <p><strong>Historial Personal:</strong> {{ patient_data.medical_history.personal }}</p>
+                    <p><strong>Historial Familiar:</strong> {{ patient_data.medical_history.family }}</p>
+                    <p><strong>Historial Clínico:</strong> {{ patient_data.medical_history.clinical }}</p>
+
                     <h4>Diagnóstico Previo</h4>
-                    <p>{{ patient_data.diagnostico }}</p>
+                    <form id="update-diagnosis-form" class="diagnosis-section">
+                        {% csrf_token %}
+                        <label for="diagnosis">Diagnóstico:</label>
+                        <input type="text" id="diagnosis" name="diagnosis" value="{{ patient_data.diagnostico }}"
+                            required>
+
+                        <label for="diagnosis_details">Detalles del Diagnóstico:</label>
+                        <textarea id="diagnosis_details" name="diagnosis_details"
+                            rows="3">{{ patient_data.diagnosis_details }}</textarea>
+
+                        <label for="additional_diagnosis">Diagnóstico Adicional:</label>
+                        <textarea id="additional_diagnosis" name="additional_diagnosis"
+                            rows="3">{{ patient_data.additional_diagnosis }}</textarea>
+
+                        <input type="hidden" name="patient_id" value="{{ patient_data.id }}">
+                    </form>
+
                 </div>
             </div>
             <div class="diagnosis-input">
-                <h4>Actualizar Diagnóstico</h4>
-                <textarea id="new_diagnosis" placeholder="Ingrese nuevo diagnóstico..."></textarea>
-                <button id="save-diagnosis">Guardar diagnóstico del paciente</button>
+                <button id="save-diagnosis" type="submit" data-patient-id="{{ patient_data.id }}">Guardar diagnóstico
+                    del paciente</button>
             </div>
         </div>
     </div>
@@ -213,11 +262,14 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
+
+            // Manejo del formulario de chat
             $('#chat-form').on('submit', function (event) {
                 event.preventDefault();
                 var user_input = $('#user_input').val();
                 var sendButton = $('#send-button');
 
+                // Deshabilitar el botón de enviar
                 sendButton.prop('disabled', true);
 
                 $.ajax({
@@ -233,37 +285,71 @@
                         $('#user_input').val('');
                         $('#chat-history').scrollTop($('#chat-history')[0].scrollHeight);
 
+                        // Habilitar el botón de enviar
                         sendButton.prop('disabled', false);
                     },
                     error: function (xhr, errmsg, err) {
                         $('#chat-history').append('<div class="message bot-message"><span>Error al enviar el mensaje.</span></div>');
 
+                        // Habilitar el botón de enviar
                         sendButton.prop('disabled', false);
                     }
                 });
             });
 
-
-            $('#save-diagnosis').on('click', function () {
-              
-                var new_diagnosis = $('#new_diagnosis').val();
+            // Manejo del botón de guardar diagnóstico
+            $('#save-diagnosis').on('click', function (event) {
+                event.preventDefault(); // Evita el envío del formulario
+                var diagnosis = $('#diagnosis').val();
+                var diagnosis_details = $('#diagnosis_details').val();
+                var additional_diagnosis = $('#additional_diagnosis').val();
+                var patient_id = $(this).data('patient-id');
 
                 $.ajax({
-                    url: '{% url "update_diagnosis" %}', 
+                    url: '/update_diagnosis/' + patient_id + '/',
                     method: 'POST',
                     data: {
-                        'new_diagnosis': new_diagnosis,
-                        'patient_id': '{{ patient_data.id }}', 
+                        'diagnosis': diagnosis,
+                        'diagnosis_details': diagnosis_details,
+                        'additional_diagnosis': additional_diagnosis,
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     },
                     success: function (data) {
                         alert('Diagnóstico actualizado correctamente');
+                        window.location.href = '{% url "home" %}';  // Redirigir a la página de inicio después de guardar
                     },
                     error: function (xhr, errmsg, err) {
                         alert('Error al guardar el diagnóstico');
                     }
                 });
             });
+
+            // Manejo del token CSRF para las solicitudes AJAX
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            const csrftoken = getCookie('csrftoken');
+
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+
         });
     </script>
 </body>

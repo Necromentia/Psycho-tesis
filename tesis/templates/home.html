@@ -17,6 +17,13 @@
             background-color: #f0f4f8;
         }
 
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+        }
+
         .sidebar {
             width: 20%;
             background-color: #1f2937;
@@ -49,6 +56,7 @@
             text-align: left;
             transition: background-color 0.3s ease;
             color: #f0f4f8;
+            font-size: medium;
         }
 
         .recent-patients button:hover {
@@ -300,10 +308,28 @@
             margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 30%;
+            width: 20%;
+            /* Aumenta el tamaño del modal para que se vea mejor */
             border-radius: 10px;
         }
-
+        .viewPatients {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+            /* Aumenta el tamaño del modal para que se vea mejor */
+            border-radius: 10px;
+        }
+        .viewPatient {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 40%;
+            /* Aumenta el tamaño del modal para que se vea mejor */
+            border-radius: 10px;
+        }
         .close {
             color: #aaa;
             float: right;
@@ -389,21 +415,44 @@
         .action-buttons .delete-button {
             background-color: #e74c3c;
         }
+
+        .patient-details-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .patient-details-container div {
+            margin-bottom: 10px;
+        }
+
+        .patient-details-container strong {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .section-title {
+            grid-column: span 2;
+            font-size: 18px;
+            margin-top: 20px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+        }
     </style>
 </head>
 
 <body>
     <div class="sidebar">
         <div>
-            <h2>Ultimos pacientes vistos</h2>
-            <div class="recent-patients">
-                {% for patient in recent_patients %}
-                <button>{{ patient.first_name }} {{ patient.last_name }}</button>
-                {% endfor %}
+            <h2>Últimos pacientes vistos</h2>
+            <div class="recent-patients" id="recent-patients">
+                <!-- Aquí se insertarán los pacientes dinámicamente -->
             </div>
         </div>
         <div class="user-info-container">
-            <div class="user-info">{{ user.username }}</div>
+            <div class="user-info">Gustavo Arnaldi Lopez</div>
             <div class="dropdown-content">
                 <a href="#">Ajustes del usuario</a>
                 <a href="{% url 'logout' %}">Cerrar sesión</a>
@@ -444,6 +493,7 @@
             {% endif %}
         </div>
     </div>
+
     <div id="actionModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -461,7 +511,6 @@
                 {% csrf_token %}
                 <label for="folder_name">Nombre de la nueva carpeta:</label>
                 <input type="text" id="folder_name" name="folder_name" required>
-
                 <label for="patient_id">Vincular paciente:</label>
                 <select id="patient_id" name="patient_id">
                     <option value="">--Seleccionar paciente--</option>
@@ -474,6 +523,7 @@
             </form>
         </div>
     </div>
+
     <div id="editFolderModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -501,7 +551,8 @@
                 <input type="hidden" id="edit_folder_id_hidden" name="folder_id">
 
                 <label for="edit_folder_name">Nuevo nombre de la carpeta:</label>
-                <input type="text" id="edit_folder_name" name="folder_name">
+                <input type="text" id="edit_folder_name" name="folder_name" value="{{folder.name}}">
+                
 
                 <label for="edit_patient_id">Agregar paciente:</label>
                 <select id="edit_patient_id" name="patient_id">
@@ -518,7 +569,7 @@
     </div>
 
     <div id="viewPatientsModal" class="modal">
-        <div class="modal-content">
+        <div class="viewPatients">
             <span class="close">&times;</span>
             <h2>Pacientes en la Carpeta: <span id="folderName"></span></h2>
             <table>
@@ -528,6 +579,7 @@
                         <th>Nombre Completo</th>
                         <th>Género</th>
                         <th>Fecha de Nacimiento</th>
+                        <th>Diagnóstico</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -537,7 +589,66 @@
             </table>
         </div>
     </div>
+    <div id="viewPatientModal" class="modal">
+        <div class="viewPatient">
+            <span class="close">&times;</span>
+            <h2>Datos del Paciente</h2>
+            <div class="patient-details-container" id="patient-details">
+                <div class="section-title">Información Personal</div>
+                <div><strong>Nombre:</strong> ${data.first_name} ${data.last_name}</div>
+                <div><strong>Género:</strong> ${data.genre}</div>
+                <div><strong>Fecha de Nacimiento:</strong> ${data.birth_date}</div>
 
+                <div class="section-title">Historial Médico</div>
+                <div><strong>Historial Personal:</strong> ${data.personal_history || 'No hay historial personal'}</div>
+                <div><strong>Historial Familiar:</strong> ${data.family_history || 'No hay historial familiar'}</div>
+                <div><strong>Historial Clínico:</strong> ${data.clinical_history || 'No hay historial clínico'}</div>
+
+                <div class="section-title">Síntomas</div>
+                <div><strong>Síntomas Físicos:</strong> ${data.physical_symptoms || 'No hay síntomas físicos'}</div>
+                <div><strong>Síntomas Sociales:</strong> ${data.social_symptoms || 'No hay síntomas sociales'}</div>
+                <div><strong>Síntomas Emocionales:</strong> ${data.emotional_symptoms || 'No hay síntomas emocionales'}
+                </div>
+                <div><strong>Síntomas de Comportamiento:</strong> ${data.behavioral_symptoms || 'No hay síntomas de
+                    comportamiento'}</div>
+
+                <div class="section-title">Diagnóstico</div>
+                <div><strong>Diagnóstico:</strong> ${data.diagnosis || 'Sin diagnóstico'}</div>
+                <div><strong>Diagnóstico detalles:</strong> ${data.diagnosis_details || 'No hay detalles'}</div>
+                <div><strong>Diagnóstico adicional:</strong> ${data.additional_diagnosis || 'No hay diagnósticos
+                    adicionales'}</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editPatientModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Editar Datos del Paciente</h2>
+            <form id="edit-patient-form" method="POST">
+                {% csrf_token %}
+                <input type="hidden" id="edit_patient_id" name="patient_id">
+
+                <label for="edit_first_name">Nombre:</label>
+                <input type="text" id="edit_first_name" name="first_name" required>
+
+                <label for="edit_last_name">Apellido:</label>
+                <input type="text" id="edit_last_name" name="last_name" required>
+
+                <label for="edit_birth_date">Fecha de Nacimiento:</label>
+                <input type="date" id="edit_birth_date" name="birth_date" required>
+
+                <label for="edit_genre">Género:</label>
+                <input type="text" id="edit_genre" name="genre" required>
+
+                <!-- Otros campos de paciente -->
+                <label for="edit_diagnosis">Diagnóstico:</label>
+                <textarea id="edit_diagnosis" name="diagnosis"></textarea>
+
+                <button type="submit" id="save-patient-changes">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const editButton = document.getElementById('edit-icon');
@@ -546,6 +657,8 @@
             const editFolderModal = document.getElementById('editFolderModal');
             const editActionsModal = document.getElementById('editActionsModal');
             const viewPatientsModal = document.getElementById('viewPatientsModal');
+            const viewPatientModal = document.getElementById('viewPatientModal'); // Añadir esta línea
+            const editPatientModal = document.getElementById('editPatientModal'); // Añadir esta línea
             const closeModalElements = document.getElementsByClassName('close');
 
             const openCreateFolderModalButton = document.getElementById('openCreateFolderModal');
@@ -600,18 +713,19 @@
                             const row = document.createElement('tr');
 
                             row.innerHTML = `
-                                <td>${patient.id}</td>
-                                <td>${patient.first_name} ${patient.last_name}</td>
-                                <td>${patient.genre}</td>
-                                <td>${patient.birth_date}</td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="view-button">Ver</button>
-                                        <button class="edit-button">Editar</button>
-                                        <button class="delete-button">Eliminar</button>
-                                    </div>
-                                </td>
-                            `;
+                        <td>${patient.id}</td>
+                        <td>${patient.first_name} ${patient.last_name}</td>
+                        <td>${patient.genre}</td>
+                        <td>${patient.birth_date}</td>
+                        <td>${patient.diagnosis || 'Sin diagnóstico'}</td> <!-- Mostrar diagnóstico o indicar que no existe -->
+                        <td>
+                            <div class="action-buttons">
+                                <button class="view-button">Ver</button>
+                                <button class="edit-button">Editar</button>
+                                <button class="delete-button">Eliminar</button>
+                            </div>
+                        </td>
+                    `;
 
                             patientList.appendChild(row);
                         });
@@ -621,11 +735,130 @@
                     .catch(error => console.error('Error:', error));
             }
 
+            // Función para eliminar paciente
+            function deletePatient(patientId, folderId) {
+                if (confirm("¿Estás seguro de que quieres eliminar este paciente?")) {
+                    fetch(`/delete_patient/${patientId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Paciente eliminado correctamente');
+                                // Recargar la carpeta actual
+                                openFolder(folderId, document.getElementById('folderName').textContent);
+                            } else {
+                                alert('Error al eliminar el paciente');
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                }
+            }
+
+            // Función para abrir el modal de ver paciente
+            function viewPatient(patientId) {
+                fetch(`/get_patient/${patientId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const patientDetails = document.getElementById('patient-details');
+                        patientDetails.innerHTML = `
+                        <div class="section-title">Información Personal</div>
+                        <div><strong>Nombre:</strong> ${data.first_name} ${data.last_name}</div>
+                        <div><strong>Género:</strong> ${data.genre}</div>
+                        <div><strong>Fecha de Nacimiento:</strong> ${data.birth_date}</div>
+
+                        <div class="section-title">Historial Médico</div>
+                        <div><strong>Historial Personal:</strong> ${data.personal_history || 'No hay historial personal'}</div>
+                        <div><strong>Historial Familiar:</strong> ${data.family_history || 'No hay historial familiar'}</div>
+                        <div><strong>Historial Clínico:</strong> ${data.clinical_history || 'No hay historial clínico'}</div>
+
+                        <div class="section-title">Síntomas</div>
+                        <div><strong>Síntomas Físicos:</strong> ${data.physical_symptoms || 'No hay síntomas físicos'}</div>
+                        <div><strong>Síntomas Sociales:</strong> ${data.social_symptoms || 'No hay síntomas sociales'}</div>
+                        <div><strong>Síntomas Emocionales:</strong> ${data.emotional_symptoms || 'No hay síntomas emocionales'}</div>
+                        <div><strong>Síntomas de Comportamiento:</strong> ${data.behavioral_symptoms || 'No hay síntomas de comportamiento'}</div>
+
+                        <div class="section-title">Diagnóstico</div>
+                        <div><strong>Diagnóstico:</strong> ${data.diagnosis || 'Sin diagnóstico'}</div>
+                        <div><strong>Diagnóstico detalles:</strong> ${data.diagnosis_details || 'No hay detalles'}</div>
+                        <div><strong>Diagnóstico adicional:</strong> ${data.aditional_diagnosis || 'No hay diagnósticos adicionales'}</div>
+                    `;
+                        viewPatientModal.style.display = 'block';
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            // Función para abrir el modal de editar paciente
+            function editPatient(patientId) {
+                fetch(`/get_patient/${patientId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('edit_patient_id').value = data.id;
+                        document.getElementById('edit_first_name').value = data.first_name;
+                        document.getElementById('edit_last_name').value = data.last_name;
+                        document.getElementById('edit_birth_date').value = data.birth_date;
+                        document.getElementById('edit_genre').value = data.genre;
+                        document.getElementById('edit_diagnosis').value = data.diagnosis || '';
+
+                        editPatientModal.style.display = 'block';
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            // Manejar la edición y guardar los cambios del paciente
+            document.getElementById('edit-patient-form').addEventListener('submit', function (event) {
+                event.preventDefault();
+                const patientId = document.getElementById('edit_patient_id').value;
+                const formData = new FormData(this);
+
+                fetch(`/update_patient/${patientId}/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Paciente actualizado correctamente');
+                            editPatientModal.style.display = 'none';
+                            // Recargar la carpeta actual
+                            const folderId = document.querySelector('.folder.active').getAttribute('data-folder-id');
+                            openFolder(folderId, document.getElementById('folderName').textContent);
+                        } else {
+                            alert('Error al actualizar el paciente');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+
+            // Asignar eventos de clic a los botones de ver, editar y eliminar
+            document.addEventListener('click', function (event) {
+                if (event.target.classList.contains('view-button')) {
+                    const patientId = event.target.closest('tr').querySelector('td:first-child').textContent;
+                    viewPatient(patientId);
+                } else if (event.target.classList.contains('edit-button')) {
+                    const patientId = event.target.closest('tr').querySelector('td:first-child').textContent;
+                    editPatient(patientId);
+                } else if (event.target.classList.contains('delete-button')) {
+                    const patientId = event.target.closest('tr').querySelector('td:first-child').textContent;
+                    const folderId = document.querySelector('.folder.active').getAttribute('data-folder-id');
+                    deletePatient(patientId, folderId);
+                }
+            });
+
             // Asignar el evento de clic a cada carpeta
             document.querySelectorAll('.folder').forEach(folder => {
                 folder.addEventListener('click', function () {
                     const folderId = folder.getAttribute('data-folder-id');
                     const folderName = folder.getAttribute('data-folder-name');
+                    // Marcar la carpeta como activa
+                    document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
+                    folder.classList.add('active');
                     openFolder(folderId, folderName);
                 });
             });
@@ -633,17 +866,34 @@
             // Cerrar los modales al hacer clic en la 'x'
             Array.from(closeModalElements).forEach(element => {
                 element.addEventListener('click', function () {
-                    actionModal.style.display = 'none';
-                    createFolderModal.style.display = 'none';
-                    editFolderModal.style.display = 'none';
-                    editActionsModal.style.display = 'none';
-                    viewPatientsModal.style.display = 'none';
+                    // Aquí se asegura que cada modal específico se cierre
+                    if (element.closest('.modal').id === 'viewPatientModal') {
+                        viewPatientModal.style.display = 'none';
+                    } else if (element.closest('.modal').id === 'editPatientModal') {
+                        editPatientModal.style.display = 'none';
+                    } else if (element.closest('.modal').id === 'actionModal') {
+                        actionModal.style.display = 'none';
+                    } else if (element.closest('.modal').id === 'createFolderModal') {
+                        createFolderModal.style.display = 'none';
+                    } else if (element.closest('.modal').id === 'editFolderModal') {
+                        editFolderModal.style.display = 'none';
+                    } else if (element.closest('.modal').id === 'editActionsModal') {
+                        editActionsModal.style.display = 'none';
+                    } else if (element.closest('.modal').id === 'viewPatientsModal') {
+                        viewPatientsModal.style.display = 'none';
+                    }
+                    updateRecentPatients();
+
                 });
             });
 
             // Cerrar el modal si se hace clic fuera del contenido del modal
             window.addEventListener('click', function (event) {
-                if (event.target === actionModal) {
+                if (event.target === viewPatientModal) {
+                    viewPatientModal.style.display = 'none';
+                } else if (event.target === editPatientModal) {
+                    editPatientModal.style.display = 'none';
+                } else if (event.target === actionModal) {
                     actionModal.style.display = 'none';
                 } else if (event.target === createFolderModal) {
                     createFolderModal.style.display = 'none';
@@ -654,8 +904,41 @@
                 } else if (event.target === viewPatientsModal) {
                     viewPatientsModal.style.display = 'none';
                 }
+                updateRecentPatients();
+
+            });
+            function updateRecentPatients() {
+                fetch('/get_recent_patients/')
+                    .then(response => response.json())
+                    .then(data => {
+                        const recentPatientsContainer = document.getElementById('recent-patients');
+                        recentPatientsContainer.innerHTML = '';
+
+                        data.recent_patients.forEach(patient => {
+                            const patientElement = document.createElement('button');
+                            patientElement.textContent = `${patient.name} - ${patient.diagnosis}`;
+                            patientElement.setAttribute('data-patient-id', patient.id);
+
+                            // Evento para redirigir al chat con la IA
+                            patientElement.addEventListener('click', function () {
+                                window.location.href = `/chat?patient_id=${patient.id}`;
+                            });
+
+                            recentPatientsContainer.appendChild(patientElement);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            // Llama a la función para actualizar la sidebar al cargar la página
+            updateRecentPatients();
+
+            // Llama a la función para actualizar la sidebar después de cerrar una carpeta
+            document.getElementById('close-folder-button').addEventListener('click', function () {
+                updateRecentPatients();
             });
         });
+
     </script>
 
 </body>

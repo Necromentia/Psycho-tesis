@@ -3,10 +3,15 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
+from django.utils.decorators import method_decorator
+
+
 from .forms import PatientForm, MedicalHistoryForm, SymptomForm, DiagnosisForm
 from .models import Patient, MedicalHistory, Symptom, Diagnosis, Folder
 import urllib.parse
@@ -47,6 +52,7 @@ def inicio(request):
 def home(request):
     folders = Folder.objects.filter(user=request.user)
     unassigned_patients = Patient.objects.filter(folder__isnull=True)
+    recent_patients = Patient.objects.filter(assigned_user=request.user, last_view_at__isnull=False).order_by('-last_view_at')[:10]
 
     if request.method == 'POST':
         if request.method == 'POST' and 'create_folder' in request.POST:
@@ -89,6 +95,7 @@ def home(request):
     return render(request, 'home.html', {
         'folders': folders,
         'unassigned_patients': unassigned_patients,
+        'recent_patients': recent_patients,
     })
 
 
@@ -102,11 +109,83 @@ def get_patients_by_folder(request, folder_id):
         'first_name': patient.first_name,
         'last_name': patient.last_name,
         'genre': patient.genre,
-        'birth_date': patient.birth_date
+        'birth_date': patient.birth_date,
+        'diagnosis': Diagnosis.objects.filter(patient=patient).last().diagnosis if Diagnosis.objects.filter(patient=patient).exists() else "No registrado"
     } for patient in patients]
 
     return JsonResponse({'patients': patient_data})
+def get_patient(request, patient_id):
+    try:
+        patient = Patient.objects.get(id=patient_id)
+        patient.last_view_at = timezone.now()
+        patient.save()
 
+        medical_history = MedicalHistory.objects.filter(patient=patient).first()
+        symptoms = Symptom.objects.filter(patient=patient).first()
+        diagnosis = Diagnosis.objects.filter(patient=patient).first()
+
+        data = {
+            'id': patient.id,
+            'first_name': patient.first_name,
+            'last_name': patient.last_name,
+            'genre': patient.genre,
+            'birth_date': patient.birth_date,
+            'personal_history': medical_history.personal_history if medical_history else 'No hay historial personal',
+            'family_history': medical_history.family_history if medical_history else 'No hay historial familiar',
+            'clinical_history': medical_history.clinical_history if medical_history else 'No hay historial clínico',
+            'physical_symptoms': symptoms.physical_symptoms if symptoms else 'No hay síntomas físicos',
+            'social_symptoms': symptoms.social_symptoms if symptoms else 'No hay síntomas sociales',
+            'emotional_symptoms': symptoms.emotional_symptoms if symptoms else 'No hay síntomas emocionales',
+            'behavioral_symptoms': symptoms.behavioral_symptoms if symptoms else 'No hay síntomas de comportamiento',
+            'diagnosis': diagnosis.diagnosis if diagnosis else 'Sin diagnóstico',
+            'diagnosis_details': diagnosis.details if diagnosis.details else 'Sin detalles',
+            'aditional_diagnosis': diagnosis.additional_diagnosis if diagnosis.additional_diagnosis else 'Sin diagnóstico adicional',
+        }
+        return JsonResponse(data)
+    except Patient.DoesNotExist:
+        return JsonResponse({'error': 'Paciente no encontrado'}, status=404)
+
+@csrf_exempt
+def update_diagnosis(request, patient_id):
+    if request.method == 'POST':
+        diagnosis = request.POST.get('diagnosis')
+        diagnosis_details = request.POST.get('diagnosis_details')
+        additional_diagnosis = request.POST.get('additional_diagnosis')
+
+        if not diagnosis:
+            return JsonResponse({'error': 'Faltan campos requeridos'}, status=400)
+
+        try:
+            patient = Patient.objects.get(id=patient_id)
+            diagnosis_obj, created = Diagnosis.objects.get_or_create(patient=patient)
+            diagnosis_obj.diagnosis = diagnosis
+            diagnosis_obj.details = diagnosis_details
+            diagnosis_obj.additional_diagnosis = additional_diagnosis
+            diagnosis_obj.save()
+
+            # Redirigir a la página de inicio después de la actualización
+            return HttpResponseRedirect(reverse('home'))
+        except Patient.DoesNotExist:
+            return JsonResponse({'error': 'Paciente no encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+def delete_patient(request, patient_id):
+    if request.method == 'POST':
+        patient = get_object_or_404(Patient, id=patient_id)
+        
+        # Eliminar todos los datos relacionados al paciente
+        MedicalHistory.objects.filter(patient=patient).delete()
+        Symptom.objects.filter(patient=patient).delete()
+        Diagnosis.objects.filter(patient=patient).delete()
+
+        # Finalmente, eliminar el paciente
+        patient.delete()
+
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 @login_required
 def create_or_edit_folder(request):
     if request.method == 'POST':
@@ -151,7 +230,7 @@ def get_response(request):
                 model='psicoia', 
                 messages=[{'role': 'user', 'content': user_input}],
                 stream=True,
-            )
+            ).get('message', {}).get('content', 'Respuesta por defecto si falla')
             
             bot_response = ''.join(chunk['message']['content'] for chunk in stream)
         
@@ -161,39 +240,46 @@ def get_response(request):
         
         return JsonResponse({'response': bot_response})
     return JsonResponse({'response': 'Método no permitido'}, status=405)
-
-
 @login_required
 def chat_view(request):
-    if request.method == 'POST':
-        user_input = request.POST.get('user_input', '')
-        try:
-            stream = ollama.chat(
-                model='psicoia',
-                messages=[{'role': 'user', 'content': user_input}],
-                stream=True,
-            )
-            bot_response = ''.join(chunk['message']['content'] for chunk in stream)
-            
-            return JsonResponse({'response': bot_response})
+    patient_id = request.GET.get('patient_id')
+    patient_data = None
 
-        except Exception as e:
-            print(f"Error al conectar con Ollama: {e}")
-            return JsonResponse({'response': 'Lo siento, no puedo procesar tu solicitud en este momento.'})
+    if patient_id:
+        patient = get_object_or_404(Patient, id=patient_id)
+        patient.last_view_at = timezone.now()
+        patient.save()
 
-    elif request.method == 'GET':
-        patient_data = request.GET.get('data')
-        if patient_data:
-            patient_data = urllib.parse.unquote(patient_data)
-            patient_data = eval(patient_data)  # Convertir la cadena de datos en un diccionario
-        else:
-            patient_data = {}
+        medical_history = MedicalHistory.objects.filter(patient=patient).first()
+        diagnosis = Diagnosis.objects.filter(patient=patient).first()
+        symptoms = Symptom.objects.filter(patient=patient).first()
 
-        return render(request, 'chat.html', {
-            'patient_data': patient_data,  # Pasar los datos del paciente al template
-        })
+        patient_data = {
+            'id': patient.id,  # Asegúrate de que `id` esté presente
+            'first_name': patient.first_name,
+            'last_name': patient.last_name,
+            'birth_date': patient.birth_date,
+            'genre': patient.genre,
+            'sintomas': {
+                'fisicos': symptoms.physical_symptoms if symptoms else '',
+                'sociales': symptoms.social_symptoms if symptoms else '',
+                'emocionales': symptoms.emotional_symptoms if symptoms else '',
+                'comportamiento': symptoms.behavioral_symptoms if symptoms else '',
+            },
+            'diagnostico': diagnosis.diagnosis if diagnosis else 'Sin diagnóstico',
+            'diagnosis_details': diagnosis.details if diagnosis else 'No hay detalles',
+            'additional_diagnosis': diagnosis.additional_diagnosis if diagnosis else 'No hay diagnósticos adicionales',
+            'medical_history': {
+                'personal': medical_history.personal_history if medical_history else 'No hay historial personal',
+                'family': medical_history.family_history if medical_history else 'No hay historial familiar',
+                'clinical': medical_history.clinical_history if medical_history else 'No hay historial clínico',
+            }
+        }
 
-    return JsonResponse({'response': 'Método no permitido'}, status=405)
+    return render(request, 'chat.html', {
+        'patient_data': patient_data,
+    })
+
 def register_patient(request):
     error_message = None
 
@@ -203,8 +289,12 @@ def register_patient(request):
         symptom_form = SymptomForm(request.POST)
         diagnosis_form = DiagnosisForm(request.POST)
         
-        if all([patient_form.is_valid(), medical_history_form.is_valid(), symptom_form.is_valid(), diagnosis_form.is_valid()]):
-            patient = patient_form.save()
+        if all([patient_form.is_valid(), medical_history_form.is_valid(), symptom_form.is_valid()]):
+            patient = patient_form.save(commit=False)  # No guardar todavía para poder asignar más campos
+            patient.assigned_user = request.user  # Asignar el usuario actual
+            patient.last_view_at = timezone.now()  # Actualizar el campo last_view_at
+            patient.save()  # Guardar el paciente ahora
+
             medical_history = medical_history_form.save(commit=False)
             medical_history.patient = patient
             medical_history.save()
@@ -217,29 +307,8 @@ def register_patient(request):
             diagnosis.patient = patient
             diagnosis.save()
 
-            # Datos del paciente como diccionario para pasarlos como parámetro
-            patient_data = {
-                'first_name': patient.first_name,
-                'last_name': patient.last_name,
-                'birth_date': patient.birth_date.strftime('%Y-%m-%d'),
-                'genre': patient.genre,
-                'sintomas': {
-                    'fisicos': symptom_form.cleaned_data['physical_symptoms'],
-                    'sociales': symptom_form.cleaned_data['social_symptoms'],
-                    'emocionales': symptom_form.cleaned_data['emotional_symptoms'],
-                    'comportamiento': symptom_form.cleaned_data['behavioral_symptoms'],
-                },
-                'diagnostico': diagnosis_form.cleaned_data['diagnosis'],
-            }
-
-            # Verificar la acción seleccionada
-            action = request.POST.get('action')
-            if action == 'interact':
-                # Serializar los datos del paciente para pasarlos en la URL
-                serialized_data = urllib.parse.quote(str(patient_data))
-                return redirect(reverse('chat') + f"?data={serialized_data}")
-            else:
-                return redirect('home')
+            # Redireccionar a la página de interacción con la IA
+            return redirect(reverse('chat') + f'?patient_id={patient.id}')
         else:
             error_message = "Hubo un error en el formulario. Por favor, revisa los campos e intenta nuevamente."
 
@@ -256,30 +325,43 @@ def register_patient(request):
         'diagnosis_form': diagnosis_form,
         'error_message': error_message,
     })
-    
+@login_required
+def get_recent_patients(request):
+    recent_patients = Patient.objects.filter(assigned_user=request.user, last_view_at__isnull=False).order_by('-last_view_at')[:10]
+    data = [
+        {
+            'id': patient.id,
+            'name': f"{patient.first_name} {patient.last_name}",
+            'diagnosis': "Diagnóstico: " + patient.diagnosis_set.last().diagnosis if patient.diagnosis_set.exists() else 'Sin diagnóstico'
+        }
+        for patient in recent_patients
+    ]
+    return JsonResponse({'recent_patients': data})
 @csrf_exempt
-def update_diagnosis(request):
+def update_patient(request, patient_id):
     if request.method == 'POST':
-        patient_id = request.POST.get('patient_id')
-        new_diagnosis = request.POST.get('new_diagnosis')
-        
+        diagnosis = request.POST.get('diagnosis')
+        diagnosis_details = request.POST.get('diagnosis_details')
+        additional_diagnosis = request.POST.get('additional_diagnosis')
+
+        if not diagnosis:
+            return JsonResponse({'error': 'Faltan campos requeridos'}, status=400)
+
         try:
-            # Buscar el paciente por ID
             patient = Patient.objects.get(id=patient_id)
-            # Actualizar el diagnóstico
-            patient.diagnosis_set.update_or_create(
-                defaults={'diagnosis': new_diagnosis},
-                patient=patient
-            )
-            return JsonResponse({'success': True, 'message': 'Diagnóstico actualizado correctamente.'})
+            diagnosis_obj, created = Diagnosis.objects.get_or_create(patient=patient)
+            diagnosis_obj.diagnosis = diagnosis
+            diagnosis_obj.details = diagnosis_details
+            diagnosis_obj.additional_diagnosis = additional_diagnosis
+            diagnosis_obj.save()
+
+            return JsonResponse({'success': 'Diagnóstico actualizado correctamente'})
         except Patient.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Paciente no encontrado.'})
+            return JsonResponse({'error': 'Paciente no encontrado'}, status=404)
         except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Error al actualizar diagnóstico: {str(e)}'})
-
-    return JsonResponse({'success': False, 'message': 'Método no permitido.'})
-
-
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
 def user_logout(request):
     logout(request)
     return redirect('inicio') 

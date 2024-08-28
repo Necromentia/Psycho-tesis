@@ -1,6 +1,8 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+
 
 class Chat(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -29,15 +31,16 @@ class Patient(models.Model):
     last_name = models.CharField(max_length=100)
     birth_date = models.DateField()
     genre = models.CharField(max_length=10)
-    assigned_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    assigned_user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     folder = models.ForeignKey(Folder, on_delete=models.SET_NULL, null=True, blank=True)  # Aquí se permite que sea nulo
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    last_view_at = models.DateTimeField(null=True, blank=True)
+    last_view_at = models.DateTimeField(null=True)
     
     
     def __str__(self):
-        return self.first_name + ' ' + self.last_name
+        return f"{self.first_name} {self.last_name}"
+
 
 
 class MedicalHistory(models.Model):
