@@ -13,11 +13,13 @@ urlpatterns = [
     path('get_patients_by_folder/<int:folder_id>/', views.get_patients_by_folder, name='get_patients_by_folder'),
     path('get_patient/<int:patient_id>/', views.get_patient, name='get_patient'),
     path('update_patient/<int:patient_id>/', views.update_patient, name='update_patient'),
-    path('delete_patient/<int:patient_id>/', views.delete_patient, name='delete_patient'),
+    path('remove_patient_from_folder/', views.remove_patient_from_folder, name='remove_patient_from_folder'),
     path('get_recent_patients/', views.get_recent_patients, name='get_recent_patients'),
     path('update_diagnosis/<int:patient_id>/', views.update_diagnosis, name='update_diagnosis'),
     path('ingreso-paciente/', views.register_patient, name='ingreso-paciente'),
     path('chat/', views.chat_view, name='chat'),
+    path('assign_patient_to_folder/', views.assign_patient_to_folder, name='assign_patient_to_folder'),
+
     path('get_response/', views.get_response, name='get_response'),
     path('logout/', views.user_logout, name='logout'),
   

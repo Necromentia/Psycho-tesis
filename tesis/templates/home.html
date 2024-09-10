@@ -312,6 +312,7 @@
             /* Aumenta el tamaño del modal para que se vea mejor */
             border-radius: 10px;
         }
+
         .viewPatients {
             background-color: #fefefe;
             margin: 5% auto;
@@ -321,6 +322,7 @@
             /* Aumenta el tamaño del modal para que se vea mejor */
             border-radius: 10px;
         }
+
         .viewPatient {
             background-color: #fefefe;
             margin: 5% auto;
@@ -330,6 +332,7 @@
             /* Aumenta el tamaño del modal para que se vea mejor */
             border-radius: 10px;
         }
+
         .close {
             color: #aaa;
             float: right;
@@ -440,6 +443,24 @@
             border-bottom: 2px solid #ccc;
             padding-bottom: 5px;
         }
+
+        .unassigned-patients-container {
+            margin-top: 20px;
+        }
+
+        .unassigned-patients {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .patient {
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: grab;
+        }
     </style>
 </head>
 
@@ -485,12 +506,48 @@
             {% if folders %}
             <div class="folders">
                 {% for folder in folders %}
-                <div class="folder" data-folder-id="{{ folder.id }}" data-folder-name="{{ folder.name }}">
+                <div class="folder" data-folder-id="{{ folder.id }}" ondrop="drop(event)" ondragover="allowDrop(event)">
                     <span>{{ folder.name }}</span>
                 </div>
+
                 {% endfor %}
             </div>
             {% endif %}
+        </div>
+        <div class="unassigned-patients-container">
+            <h3>Pacientes sin carpeta:</h3>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre Completo</th>
+                        <th>Género</th>
+                        <th>Fecha de Nacimiento</th>
+                        <th>Diagnóstico</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in unassigned_patients %}
+                    <tr class="patient" draggable="true" ondragstart="drag(event)" data-patient-id="{{ patient.id }}">
+                        <td>{{ patient.id }}</td>
+                        <td>{{ patient.first_name }} {{ patient.last_name }}</td>
+                        <td>{{ patient.genre }}</td>
+                        <td>{{ patient.birth_date }}</td>
+                        <td> {% if patient.diagnosis_set.exists %}
+                            {{ patient.diagnosis_set.last.diagnosis }}
+                            {% else %}
+                            Sin diagnóstico
+                            {% endif %}</td>
+                        <td>
+                            <button class="view-button">Ver</button>
+                            <button class="edit-button">Editar</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
         </div>
     </div>
 
@@ -552,7 +609,7 @@
 
                 <label for="edit_folder_name">Nuevo nombre de la carpeta:</label>
                 <input type="text" id="edit_folder_name" name="folder_name" value="{{folder.name}}">
-                
+
 
                 <label for="edit_patient_id">Agregar paciente:</label>
                 <select id="edit_patient_id" name="patient_id">
@@ -736,25 +793,28 @@
             }
 
             // Función para eliminar paciente
-            function deletePatient(patientId, folderId) {
-                if (confirm("¿Estás seguro de que quieres eliminar este paciente?")) {
-                    fetch(`/delete_patient/${patientId}/`, {
+            function removePatientFromFolder(patientId) {
+                if (confirm('¿Estás seguro de que deseas eliminar a este paciente de la carpeta?')) {
+                    fetch(`/remove_patient_from_folder/`, {
                         method: 'POST',
                         headers: {
+                            'Content-Type': 'application/json',
                             'X-CSRFToken': '{{ csrf_token }}'
-                        }
-                    })
-                        .then(response => response.json())
+                        },
+                        body: JSON.stringify({
+                            'patient_id': patientId
+                        })
+                    }).then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                alert('Paciente eliminado correctamente');
-                                // Recargar la carpeta actual
-                                openFolder(folderId, document.getElementById('folderName').textContent);
+                                alert('Paciente eliminado de la carpeta correctamente');
+                                location.reload();  // Recargar la página para reflejar los cambios
                             } else {
-                                alert('Error al eliminar el paciente');
+                                alert('Error al eliminar al paciente de la carpeta');
                             }
-                        })
-                        .catch(error => console.error('Error:', error));
+                        }).catch(error => {
+                            console.error('Error:', error);
+                        });
                 }
             }
 
@@ -847,7 +907,7 @@
                 } else if (event.target.classList.contains('delete-button')) {
                     const patientId = event.target.closest('tr').querySelector('td:first-child').textContent;
                     const folderId = document.querySelector('.folder.active').getAttribute('data-folder-id');
-                    deletePatient(patientId, folderId);
+                    removePatientFromFolder(patientId);
                 }
             });
 
@@ -929,6 +989,53 @@
                     })
                     .catch(error => console.error('Error:', error));
             }
+            function allowDrop(event) {
+                event.preventDefault();
+            }
+
+            function drag(event) {
+                event.dataTransfer.setData("text", event.target.getAttribute('data-patient-id'));
+            }
+
+            function drop(event) {
+                event.preventDefault();
+                var patientId = event.dataTransfer.getData("text");
+                var folderId = event.target.getAttribute('data-folder-id');
+
+                // Realiza una solicitud AJAX para actualizar el paciente con la carpeta seleccionada
+                fetch(`/assign_patient_to_folder/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        'patient_id': patientId,
+                        'folder_id': folderId
+                    })
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Paciente asignado correctamente');
+                            location.reload();  // Actualiza la página para reflejar el cambio
+                        } else {
+                            alert('Error al asignar el paciente');
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            // Ahora asegúrate de que los elementos tengan los eventListeners de arrastrar y soltar
+            document.querySelectorAll('.folder').forEach(function (folder) {
+                folder.addEventListener('dragover', allowDrop);
+                folder.addEventListener('drop', drop);
+            });
+
+            document.querySelectorAll('.patient').forEach(function (patient) {
+                patient.addEventListener('dragstart', drag);
+            });
+
 
             // Llama a la función para actualizar la sidebar al cargar la página
             updateRecentPatients();

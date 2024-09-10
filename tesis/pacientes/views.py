@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
 from django.utils.decorators import method_decorator
+import json
 
 
 from .forms import PatientForm, MedicalHistoryForm, SymptomForm, DiagnosisForm
@@ -282,7 +283,24 @@ def chat_view(request):
     return render(request, 'chat.html', {
         'patient_data': patient_data,
     })
+@csrf_exempt
+def assign_patient_to_folder(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)  # Asegúrate de parsear el JSON del cuerpo
+        patient_id = data.get('patient_id')
+        folder_id = data.get('folder_id')
 
+        try:
+            patient = Patient.objects.get(id=patient_id)
+            folder = Folder.objects.get(id=folder_id)
+            patient.folder = folder  # Asigna la carpeta al paciente
+            patient.save()  # Guarda el cambio en la base de datos
+            return JsonResponse({'success': True})
+        except Patient.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Paciente no encontrado'})
+        except Folder.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Carpeta no encontrada'})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
 def register_patient(request):
     error_message = None
 
@@ -365,6 +383,26 @@ def update_patient(request, patient_id):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    
+@csrf_exempt
+def remove_patient_from_folder(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        patient_id = data.get('patient_id')
+
+        try:
+            patient = Patient.objects.get(id=patient_id)
+            # Eliminar el paciente de la carpeta
+            patient.folder = None
+            patient.save()
+
+            return JsonResponse({'success': True})
+        except Patient.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Paciente no encontrado'})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
 def user_logout(request):
     logout(request)
     return redirect('inicio') 
