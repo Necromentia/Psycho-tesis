@@ -273,13 +273,14 @@
                 sendButton.prop('disabled', true);
 
                 $.ajax({
-                    url: '{% url "chat" %}',
+                    url: '{% url "get_response" %}',
                     method: 'POST',
                     data: {
                         'user_input': user_input,
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     },
                     success: function (data) {
+                        console.log(data); // Verifica qué se está devolviendo
                         $('#chat-history').append('<div class="message user-message"><span>Tú: ' + user_input + '</span></div>');
                         $('#chat-history').append('<div class="message bot-message"><span>IA: ' + data.response + '</span></div>');
                         $('#user_input').val('');

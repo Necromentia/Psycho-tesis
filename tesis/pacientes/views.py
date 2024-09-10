@@ -225,21 +225,24 @@ def delete_folder(request):
 def get_response(request):
     if request.method == 'POST':
         user_input = request.POST.get('user_input', '')
+        print(f"User input: {user_input}")  # Verifica que se está recibiendo el input
         try:
             stream = ollama.chat(
-                model='psicoia', 
+                model='tesis', 
                 messages=[{'role': 'user', 'content': user_input}],
                 stream=True,
-            ).get('message', {}).get('content', 'Respuesta por defecto si falla')
+            )
             
             bot_response = ''.join(chunk['message']['content'] for chunk in stream)
+            print(f"Bot response: {bot_response}")  # Verifica que se está generando una respuesta válida
         
         except Exception as e:
-            print(f"Error al conectar con Ollama: {e}")
+            print(f"Error al conectar con Ollama: {e}")  # Imprime cualquier error de conexión con la IA
             bot_response = 'Lo siento, no puedo procesar tu solicitud en este momento.'
         
         return JsonResponse({'response': bot_response})
     return JsonResponse({'response': 'Método no permitido'}, status=405)
+
 @login_required
 def chat_view(request):
     patient_id = request.GET.get('patient_id')
