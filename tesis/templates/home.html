@@ -374,6 +374,19 @@
             background-color: #0f766e;
         }
 
+        .pdf-button {
+            padding: 10px 20px;
+            background-color: #4e678b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pdf-button:hover {
+            background-color: #3b4d66;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -421,21 +434,23 @@
             background-color: #e74c3c;
         }
 
+        .action-buttons .restore-button {
+            background-color: #10b981;
+        }
+
         .patient-details-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
+            text-align: center;
+        }
+
+        .patient-details-container .section-title {
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #333;
         }
 
         .patient-details-container div {
             margin-bottom: 10px;
-        }
-
-        .patient-details-container strong {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
         }
 
         .section-title {
@@ -519,7 +534,7 @@
                 </div>
             </div>
         </div>
-        
+
     </div>
 
     <div class="main-content">
@@ -547,14 +562,17 @@
             {% if folders %}
             <div class="folders">
                 {% for folder in folders %}
+                {% if not folder.is_fixed %}
                 <div class="folder" data-folder-id="{{ folder.id }}">
                     <span>{{ folder.name }}</span>
                 </div>
-
+                {% endif %}
                 {% endfor %}
             </div>
             {% endif %}
         </div>
+
+
         <div class="unassigned-patients-container">
             <h3>Pacientes sin carpeta:</h3>
             <table class="table table-bordered table-striped">
@@ -581,9 +599,11 @@
                             Sin diagnóstico
                             {% endif %}</td>
                         <td>
-                            <button class="view-button">Ver</button>
-                            <button class="edit-button">Editar</button>
-                            <button class="delete-button">Eliminar</button>
+                            <div class="action-buttons">
+                                <button class="view-button">Ver</button>
+                                <button class="edit-button">Editar</button>
+                                <button class="delete-button">Eliminar</button>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -692,12 +712,23 @@
         <div class="viewPatient">
             <span class="close">&times;</span>
             <h2>Datos del Paciente</h2>
+            <button id="downloadPdfButton" class="pdf-button">Descargar PDF</button>
 
             <div class="patient-details-container" id="patient-details">
                 <div class="section-title">Información Personal</div>
                 <div><strong>Nombre:</strong> ${data.first_name} ${data.last_name}</div>
+                <div><strong>Rut:</strong> ${data.rut}</div>
                 <div><strong>Género:</strong> ${data.genre}</div>
                 <div><strong>Fecha de Nacimiento:</strong> ${data.birth_date}</div>
+                <div><strong>Edad:</strong> ${data.age}</div>
+
+                <div><strong>Correo Electrónico:</strong> ${data.email}</div>
+                <div><strong>Teléfono:</strong> ${data.phone}</div>
+                <div><strong>Región:</strong> ${data.region}</div>
+                <div><strong>Ciudad:</strong> ${data.ciudad}</div>
+                <div><strong>Comuna:</strong> ${data.comuna}</div>
+                <div><strong>Centro de salud al que pertenece:</strong> ${data.centro_de_salud}</div>
+
 
                 <div class="section-title">Historial Médico</div>
                 <div><strong>Historial Personal:</strong> ${data.personal_history || 'No hay historial personal'}</div>
@@ -938,34 +969,34 @@
                             if (folderName === 'Papelera') {
                                 // Acciones específicas para la "Papelera"
                                 row.innerHTML = `
-                        <td>${patient.id}</td>
-                        <td>${patient.first_name} ${patient.last_name}</td>
-                        <td>${patient.genre}</td>
-                        <td>${patient.birth_date}</td>
-                        <td>${patient.diagnosis || 'Sin diagnóstico'}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="view-button">Ver</button>
-                                <button class="restore-button">Restaurar</button>
-                            </div>
-                        </td>
-                    `;
+                                <td>${patient.id}</td>
+                                <td>${patient.first_name} ${patient.last_name}</td>
+                                <td>${patient.genre}</td>
+                                <td>${patient.birth_date}</td>
+                                <td>${patient.diagnosis || 'Sin diagnóstico'}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="view-button">Ver</button>
+                                        <button class="restore-button">Restaurar</button>
+                                    </div>
+                                </td>
+                            `;
                             } else {
                                 // Acciones para otras carpetas
                                 row.innerHTML = `
-                        <td>${patient.id}</td>
-                        <td>${patient.first_name} ${patient.last_name}</td>
-                        <td>${patient.genre}</td>
-                        <td>${patient.birth_date}</td>
-                        <td>${patient.diagnosis || 'Sin diagnóstico'}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="view-button">Ver</button>
-                                <button class="edit-button">Editar</button>
-                                <button class="delete-button">Eliminar</button>
-                            </div>
-                        </td>
-                    `;
+                                <td>${patient.id}</td>
+                                <td>${patient.first_name} ${patient.last_name}</td>
+                                <td>${patient.genre}</td>
+                                <td>${patient.birth_date}</td>
+                                <td>${patient.diagnosis || 'Sin diagnóstico'}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="view-button">Ver</button>
+                                        <button class="edit-button">Editar</button>
+                                        <button class="delete-button">Eliminar</button>
+                                    </div>
+                                </td>
+                            `;
                             }
 
                             patientList.appendChild(row);
@@ -1049,9 +1080,11 @@
                     <td>${patient.birth_date}</td>
                     <td>${patient.diagnosis || 'Sin diagnóstico'}</td>
                     <td>
-                        <button class="view-button">Ver</button>
-                        <button class="edit-button">Editar</button>
-                        <button class="delete-button">Eliminar</button>
+                        <div class="action-buttons">
+                            <button class="view-button">Ver</button>
+                            <button class="edit-button">Editar</button>
+                            <button class="delete-button">Eliminar</button>
+                        </div>
                     </td>
                 `;
 
@@ -1070,6 +1103,13 @@
                         <div><strong>Nombre:</strong> ${data.first_name} ${data.last_name}</div>
                         <div><strong>Género:</strong> ${data.genre}</div>
                         <div><strong>Fecha de Nacimiento:</strong> ${data.birth_date}</div>
+                        <div><strong>Edad:</strong> ${data.age}</div>
+                        <div><strong>Correo Electrónico:</strong> ${data.email}</div>
+                        <div><strong>Teléfono:</strong> ${data.phone}</div>
+                        <div><strong>Región:</strong> ${data.region}</div>
+                        <div><strong>Ciudad:</strong> ${data.ciudad}</div>
+                        <div><strong>Comuna:</strong> ${data.comuna}</div>
+                        <div><strong>Centro de salud al que pertenece:</strong> ${data.centro_de_salud}</div>
 
                         <div class="section-title">Historial Médico</div>
                         <div><strong>Historial Personal:</strong> ${data.personal_history || 'No hay historial personal'}</div>
@@ -1088,6 +1128,12 @@
                         <div><strong>Diagnóstico adicional:</strong> ${data.aditional_diagnosis || 'No hay diagnósticos adicionales'}</div>
                     `;
                         viewPatientModal.style.display = 'block';
+                        const downloadPdfButton = document.getElementById('downloadPdfButton');
+                        if (downloadPdfButton) {
+                            downloadPdfButton.onclick = function () {
+                                downloadPatientPdf(patientId);
+                            };
+                        }
                     })
                     .catch(error => console.error('Error:', error));
             }
@@ -1215,6 +1261,7 @@
                 fetch('/get_recent_patients/')
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Datos recibidos:', data);
                         const recentPatientsContainer = document.getElementById('recent-patients');
                         recentPatientsContainer.innerHTML = '';
 
@@ -1257,7 +1304,10 @@
                     }
                 });
             }
-
+            function downloadPatientPdf(patientId) {
+                // Redirigir a la URL que genera el PDF
+                window.location.href = `/download_patient_pdf/${patientId}/`;
+            }
             function allowDrop(event) {
                 event.preventDefault();
             }

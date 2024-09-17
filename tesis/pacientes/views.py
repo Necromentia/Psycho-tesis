@@ -3,12 +3,18 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from django.template.loader import render_to_string
+
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import letter
+
 from django.utils.decorators import method_decorator
 import json
 
@@ -131,6 +137,14 @@ def get_patient(request, patient_id):
             'last_name': patient.last_name,
             'genre': patient.genre,
             'birth_date': patient.birth_date,
+            'age': patient.age,
+            'rut': patient.rut,
+            'region': patient.region,
+            'ciudad': patient.ciudad,
+            'comuna': patient.comuna,
+            'centro_de_salud': patient.centro_de_salud,
+            'phone': patient.phone,
+            'email': patient.email,
             'personal_history': medical_history.personal_history if medical_history else 'No hay historial personal',
             'family_history': medical_history.family_history if medical_history else 'No hay historial familiar',
             'clinical_history': medical_history.clinical_history if medical_history else 'No hay historial clínico',
@@ -348,7 +362,8 @@ def register_patient(request):
     })
 @login_required
 def get_recent_patients(request):
-    recent_patients = Patient.objects.filter(assigned_user=request.user, last_view_at__isnull=False).order_by('-last_view_at')[:10]
+    #recent_patients = Patient.objects.filter(assigned_user=request.user, last_view_at__isnull=False).order_by('-last_view_at')[:10]
+    recent_patients = Patient.objects.filter(assigned_user=request.user).exclude(folder__is_fixed=True).order_by('-last_view_at')[:5]
     data = [
         {
             'id': patient.id,
@@ -452,6 +467,102 @@ def delete_folder(request):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
+
+@login_required
+def download_patient_pdf(request, patient_id):
+    try:
+        patient = Patient.objects.get(id=patient_id)
+        
+
+        # Crear el objeto HttpResponse con el tipo de contenido PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="Paciente_{patient.first_name}_{patient.last_name}.pdf"'
+
+        doc = SimpleDocTemplate(response, pagesize=letter)
+        styles = getSampleStyleSheet()
+        elements = []
+
+        # Aquí agregaremos el contenido del PDF
+
+        # Título Principal
+        elements.append(Paragraph("Informe del Paciente", styles['Title']))
+        elements.append(Spacer(1, 12))
+        
+        # Nombre del Paciente
+        elements.append(Paragraph(f"{patient.first_name} {patient.last_name}", styles['Heading2']))
+        elements.append(Spacer(1, 12))
+        # Información Personal
+        elements.append(Paragraph("Información Personal", styles['Heading3']))
+        elements.append(Spacer(1, 12))
+
+        personal_info = [
+            f"<strong>Nombre:</strong> {patient.first_name} {patient.last_name}",
+            f"<strong>Género:</strong> {patient.genre}",
+            f"<strong>Fecha de Nacimiento:</strong> {patient.birth_date.strftime('%d/%m/%Y')}",
+            f"<strong>Edad:</strong> {patient.age} años",
+            f"<strong>Dirección:</strong> {patient.address or 'No especificada'}",
+            f"<strong>Teléfono:</strong> {patient.phone or 'No especificado'}",
+            f"<strong>Email:</strong> {patient.email or 'No especificado'}",
+            f"<strong>Región:</strong> {patient.region or 'No especificada'}",
+            f"<strong>Ciudad:</strong> {patient.ciudad or 'No especificada'}",
+            f"<strong>Comuna:</strong> {patient.comuna or 'No especificada'}",
+            f"<strong>Centro de salud al que pertenece:</strong> {patient.centro_de_salud or 'No especificado'}",
+        ]
+
+        for info in personal_info:
+            elements.append(Paragraph(info, styles['Normal']))
+            elements.append(Spacer(1, 6))
+        # Historial Médico
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph("Historial Médico", styles['Heading3']))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(f"{patient.personal_history or 'No hay historial personal'}", styles['Normal']))
+        # Historial Familiar
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph("Historial Familiar", styles['Heading3']))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(f"{patient.family_history or 'No hay historial familiar'}", styles['Normal']))
+
+        # Historial Clínico
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph("Historial Clínico", styles['Heading3']))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(f"{patient.clinical_history or 'No hay historial clínico'}", styles['Normal']))
+        # Síntomas
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph("Síntomas", styles['Heading3']))
+        elements.append(Spacer(1, 12))
+
+        symptoms = [
+            f"<strong>Síntomas Físicos:</strong> {patient.physical_symptoms or 'No hay síntomas físicos'}",
+            f"<strong>Funcionamiento Social:</strong> {patient.social_symptoms or 'No hay síntomas sociales'}",
+            f"<strong>Síntomas Emocionales:</strong> {patient.emotional_symptoms or 'No hay síntomas emocionales'}",
+            f"<strong>Síntomas de Comportamiento:</strong> {patient.behavioral_symptoms or 'No hay síntomas de comportamiento'}",
+        ]
+
+        for symptom in symptoms:
+            elements.append(Paragraph(symptom, styles['Normal']))
+            elements.append(Spacer(1, 6))
+        # Hipótesis Diagnóstica
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph("Hipótesis Diagnóstica", styles['Heading3']))
+        elements.append(Spacer(1, 12))
+
+        diagnosis = patient.diagnosis_set.last()
+        if diagnosis:
+            elements.append(Paragraph(f"{diagnosis.diagnosis or 'Sin diagnóstico'}", styles['Normal']))
+            elements.append(Spacer(1, 6))
+            elements.append(Paragraph(f"<strong>Detalles del Diagnóstico:</strong> {diagnosis.details or 'No hay detalles'}", styles['Normal']))
+            elements.append(Spacer(1, 6))
+            elements.append(Paragraph(f"<strong>Diagnóstico Adicional:</strong> {diagnosis.additional_diagnosis or 'No hay diagnósticos adicionales'}", styles['Normal']))
+        else:
+            elements.append(Paragraph("Sin diagnóstico", styles['Normal']))
+
+
+        doc.build(elements)
+        return response
+    except Patient.DoesNotExist:
+        return HttpResponse('Paciente no encontrado', status=404)
 @csrf_exempt
 def remove_patient_from_folder(request):
     if request.method == 'POST':

@@ -44,6 +44,9 @@ class Patient(models.Model):
     ciudad = models.CharField(max_length=50, null=True)
     comuna = models.CharField(max_length=50, null=True)
     centro_de_salud = models.CharField(max_length=100, null=True)
+    phone = models.CharField(max_length=12, null=True)
+    email = models.EmailField(null=True)
+    address = models.CharField(max_length=255, null=True)
 
     
     @property
