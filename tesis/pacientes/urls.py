@@ -17,6 +17,9 @@ urlpatterns = [
     path('get_recent_patients/', views.get_recent_patients, name='get_recent_patients'),
     path('update_diagnosis/<int:patient_id>/', views.update_diagnosis, name='update_diagnosis'),
     path('ingreso-paciente/', views.register_patient, name='ingreso-paciente'),
+    path('move_patient_to_trash/', views.move_patient_to_trash, name='move_patient_to_trash'),
+    path('restore_patient_from_trash/', views.restore_patient_from_trash, name='restore_patient_from_trash'),
+    path('get_trash_folder_id/', views.get_trash_folder_id, name='get_trash_folder_id'),
     path('chat/', views.chat_view, name='chat'),
     path('assign_patient_to_folder/', views.assign_patient_to_folder, name='assign_patient_to_folder'),
 

@@ -241,11 +241,12 @@
         }
     
         // Mostrar el modal si hay un error de registro
-        {% if register_error %}
-        window.onload = function() {
-            modal.style.display = "block";
+        var registerError = "{{ register_error|escapejs }}";
+        if (registerError) {
+            window.onload = function() {
+                modal.style.display = "block";
+            }
         }
-        {% endif %}
     </script>
     
     

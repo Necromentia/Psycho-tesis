@@ -383,8 +383,75 @@ def update_patient(request, patient_id):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Método no permitido'}, status=405)
-    
-    
+
+@csrf_exempt
+def move_patient_to_trash(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        patient_id = data.get('patient_id')
+        try:
+            patient = Patient.objects.get(id=patient_id)
+            # Obtener la carpeta "Papelera" del usuario
+            trash_folder, created = Folder.objects.get_or_create(
+                user=request.user,
+                name='Papelera',
+                defaults={'is_fixed': True}
+            )
+            patient.folder = trash_folder
+            patient.save()
+            return JsonResponse({'success': True})
+        except Patient.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Paciente no encontrado'})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)    
+@login_required
+def get_trash_folder_id(request):
+    try:
+        trash_folder = Folder.objects.get(user=request.user, name='Papelera')
+        return JsonResponse({'folder_id': trash_folder.id})
+    except Folder.DoesNotExist:
+        return JsonResponse({'folder_id': None})
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+@login_required
+def restore_patient_from_trash(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        patient_id = data.get('patient_id')
+        try:
+            patient = Patient.objects.get(id=patient_id)
+            # Verificar que el paciente está en la "Papelera"
+            if patient.folder.name == 'Papelera' and patient.folder.user == request.user:
+                patient.folder = None  # Asignar a sin carpeta
+                patient.save()
+                # Preparar los datos del paciente para enviarlos al cliente
+                patient_data = {
+                    'id': patient.id,
+                    'first_name': patient.first_name,
+                    'last_name': patient.last_name,
+                    'genre': patient.genre,
+                    'birth_date': str(patient.birth_date),
+                    'diagnosis': patient.diagnosis_set.last().diagnosis if patient.diagnosis_set.exists() else 'Sin diagnóstico'
+                }
+                return JsonResponse({'success': True, 'patient': patient_data})
+            else:
+                return JsonResponse({'success': False, 'error': 'El paciente no está en la Papelera'})
+        except Patient.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Paciente no encontrado'})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+@login_required
+def delete_folder(request):
+    if request.method == 'POST':
+        folder_id = request.POST.get('folder_id')
+        folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+        if folder.is_fixed:
+            return JsonResponse({'success': False, 'error': 'No se puede eliminar esta carpeta'})
+        folder.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
 @csrf_exempt
 def remove_patient_from_folder(request):
     if request.method == 'POST':

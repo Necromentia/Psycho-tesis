@@ -223,7 +223,7 @@
 
                     <h4>Síntomas</h4>
                     <p><strong>Físicos:</strong> {{ patient_data.sintomas.fisicos }}</p>
-                    <p><strong>Sociales:</strong> {{ patient_data.sintomas.sociales }}</p>
+                    <p><strong>Funcionamiento social:</strong> {{ patient_data.sintomas.sociales }}</p>
                     <p><strong>Emocionales:</strong> {{ patient_data.sintomas.emocionales }}</p>
                     <p><strong>Comportamiento:</strong> {{ patient_data.sintomas.comportamiento }}</p>
 
@@ -235,7 +235,7 @@
                     <h4>Diagnóstico Previo</h4>
                     <form id="update-diagnosis-form" class="diagnosis-section">
                         {% csrf_token %}
-                        <label for="diagnosis">Diagnóstico:</label>
+                        <label for="diagnosis">Hipotesis diagnóstica:</label>
                         <input type="text" id="diagnosis" name="diagnosis" value="{{ patient_data.diagnostico }}"
                             required>
 

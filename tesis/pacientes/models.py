@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from datetime import date
 
 
 class Chat(models.Model):
@@ -20,6 +21,8 @@ class Folder(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_fixed = models.BooleanField(default=False)  # Nuevo campo
+
 
     def __str__(self):
         return self.name
@@ -36,7 +39,17 @@ class Patient(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_view_at = models.DateTimeField(null=True)
+    rut = models.CharField(max_length=12, unique=True, null=True)
+    region = models.CharField(max_length=50, null=True)
+    ciudad = models.CharField(max_length=50, null=True)
+    comuna = models.CharField(max_length=50, null=True)
+    centro_de_salud = models.CharField(max_length=100, null=True)
+
     
+    @property
+    def age(self):
+        today = date.today()
+        return today.year - self.birth_date.year - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
     
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
