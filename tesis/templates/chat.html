@@ -15,7 +15,8 @@
             background-color: #f0f0f0;
             color: #333;
             display: flex;
-            justify-content: space-between; /* Distribuye los sidebars y el main-container */
+            justify-content: space-between;
+            /* Distribuye los sidebars y el main-container */
             align-items: stretch;
             height: 100vh;
             overflow: hidden;
@@ -23,7 +24,8 @@
 
         /* Estilos comunes para ambos sidebars */
         .sidebar {
-            position: relative; /* Para posicionar el botón de toggle correctamente */
+            position: relative;
+            /* Para posicionar el botón de toggle correctamente */
             background-color: #1f2937;
             padding: 20px;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
@@ -31,77 +33,114 @@
             flex-direction: column;
             justify-content: space-between;
             transition: width 0.3s ease;
-            overflow: hidden; /* Oculta el contenido cuando está cerrado */
+            overflow: hidden;
+            /* Oculta el contenido cuando está cerrado */
+        }
+
+        .sidebar h2 {
+            margin: 0 0 20px;
+            font-size: 18px;
+            color: #f0f4f8;
         }
 
         /* Sidebar Izquierdo */
         .left-sidebar {
-            width: 25%; /* Ancho inicial */
+            width: 20%;
+            /* Ancho inicial */
         }
 
         /* Sidebar Derecho */
         .right-sidebar {
-            width: 20%; /* Ancho inicial */
+            width: 20%;
+            /* Ancho inicial */
         }
 
         /* Estilos para los botones de toggle */
         .toggle-button {
             position: absolute;
-            top: 50%; /* Centra verticalmente */
-            transform: translateY(-50%); /* Ajusta la posición para centrar perfectamente */
-            background-color: #1f2937;
+            top: 10px;
+            /* Ajusta según tu diseño */
+            background-color: transparent;
+            /* Fondo transparente para solo mostrar el ícono */
             border: none;
-            border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.3s ease, right 0.3s ease, left 0.3s ease;
-            z-index: 1000;
-            padding: 0; /* Elimina el padding para que la imagen ocupe todo el botón */
+            padding: 0;
+            width: 24px;
+            /* Tamaño del ícono */
+            height: 24px;
+            /* Elimina el padding para que la imagen ocupe todo el botón */
         }
 
         /* Toggle Button Izquierdo */
         .toggle-button-left {
-            right: -12px; /* Posiciona el botón fuera del sidebar izquierdo */
+            right: 10px;
+            /* Posiciona el botón fuera del sidebar izquierdo */
         }
 
         /* Toggle Button Derecho */
         .toggle-button-right {
-            left: -12px; /* Posiciona el botón fuera del sidebar derecho */
+            right: 10px;
+            /* Posiciona el botón fuera del sidebar derecho */
         }
 
         /* Imágenes de las flechas */
         .toggle-button img {
-            width: 24px; /* Ajusta el tamaño según sea necesario */
+            width: 24px;
+            /* Ajusta el tamaño según sea necesario */
             height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar:not(.collapsed) .toggle-button img {
+            transform: rotate(180deg);
+        }
+
+        .sidebar.collapsed .toggle-button img {
+            transform: rotate(0deg);
+        }
+
+        .right-sidebar:not(.collapsed) .toggle-button-right img {
+            transform: rotate(0deg);
+            /* Flecha apuntando a la izquierda */
+            transition: transform 0.3s ease;
+        }
+
+        .right-sidebar.collapsed .toggle-button-right img {
+            transform: rotate(180deg);
+            /* Flecha apuntando a la derecha */
             transition: transform 0.3s ease;
         }
 
         /* Sidebar Colapsado Izquierdo */
         .left-sidebar.collapsed {
-            width: 10px; /* Ancho reducido cuando está cerrado */
+            width: 10px;
+            /* Ancho reducido cuando está cerrado */
         }
 
         /* Sidebar Colapsado Derecho */
         .right-sidebar.collapsed {
-            width: 10px; /* Ancho reducido cuando está cerrado */
+            width: 10px;
+            /* Ancho reducido cuando está cerrado */
         }
 
-        /* Oculta el contenido textual cuando el sidebar está cerrado */
-        .sidebar .sidebar-content {
+        .sidebar .sidebar-content,
+        .left-sidebar .user-info-container {
             transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
         }
 
+        /* Estado Colapsado */
         .left-sidebar.collapsed .sidebar-content,
+        .left-sidebar.collapsed .user-info-container,
         .right-sidebar.collapsed .sidebar-content {
             opacity: 0;
             visibility: hidden;
-            transform: translateX(-20px); /* Desplaza ligeramente el contenido hacia la izquierda */
+            transform: translateX(-20px);
+            /* Opcional: desplaza el contenido hacia la izquierda */
         }
 
-        .sidebar:not(.collapsed) .sidebar-content {
+        /* Estado Expandido */
+        .sidebar:not(.collapsed) .sidebar-content,
+        .left-sidebar:not(.collapsed) .user-info-container {
             opacity: 1;
             visibility: visible;
             transform: translateX(0);
@@ -109,11 +148,13 @@
 
         /* Main Container */
         .main-container {
-            flex-grow: 1; /* Permite que el contenedor crezca para llenar el espacio disponible */
+            flex-grow: 1;
+            /* Permite que el contenedor crezca para llenar el espacio disponible */
             display: flex;
             flex-direction: column;
             padding: 20px;
-            overflow-y: auto; /* Permite el desplazamiento vertical si el contenido es demasiado grande */
+            overflow-y: auto;
+            /* Permite el desplazamiento vertical si el contenido es demasiado grande */
         }
 
         /* Chat Container */
@@ -131,11 +172,16 @@
         }
 
         .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Centra los elementos horizontalmente */
+            position: relative;
+            /* Necesario para posicionar el botón absoluto */
             background-color: #f7f7f7;
             padding: 15px;
             font-size: 20px;
             font-weight: bold;
-            text-align: center;
             border-bottom: 1px solid #ddd;
         }
 
@@ -177,6 +223,9 @@
 
         .chat-input form {
             display: flex;
+            align-items: flex-end;
+            /* Alinea el botón de enviar al final de la textarea */
+
             width: 100%;
         }
 
@@ -188,7 +237,13 @@
             background-color: #fff;
             color: #333;
             resize: none;
-            height: 50px;
+            /* Opcional: evita que el usuario cambie el tamaño manualmente */
+            min-height: 50px;
+            /* Altura mínima */
+            max-height: 150px;
+            /* Altura máxima antes de mostrar scroll */
+            overflow: hidden;
+            /* Oculta la barra de desplazamiento */
             font-size: 16px;
             box-sizing: border-box;
         }
@@ -214,7 +269,8 @@
         .patient-info-content {
             /* Asegura que el contenido del sidebar derecho tenga un scroll si es necesario */
             overflow-y: auto;
-            max-height: calc(100vh - 80px); /* Ajusta según el padding y el tamaño del botón */
+            max-height: calc(100vh - 80px);
+            /* Ajusta según el padding y el tamaño del botón */
         }
 
         .patient-info-content h2 {
@@ -223,6 +279,13 @@
             font-size: 20px;
             color: #ffffff;
         }
+
+        .patient-info-content h4 {
+            margin-top: 0;
+            font-size: 16px;
+            color: #ffffff;
+        }
+
 
         .patient-info-content p,
         .patient-info-content label {
@@ -259,9 +322,12 @@
             resize: vertical;
         }
 
-        #save-diagnosis {
+        #save-diagnosis,
+        #view-patient-info {
+            display: left;
             margin-top: 20px;
             padding: 15px;
+            width: 40%;
             border-radius: 5px;
             background-color: #28a745;
             color: white;
@@ -270,11 +336,25 @@
             font-size: 16px;
             font-weight: bold;
             text-align: center;
+
+        }
+
+        #save-diagnosis {
+            float: left;
         }
 
         #save-diagnosis:hover {
             background-color: #218838;
         }
+
+        #view-patient-info {
+            float: right;
+        }
+
+        #view-patient-info:hover {
+            background-color: #218838;
+        }
+
 
         /* Pacientes Recientes */
         .recent-patients {
@@ -306,6 +386,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
         }
 
         .user-info {
@@ -374,6 +457,40 @@
             background-color: #181f2b;
         }
 
+        .chat-header {
+            display: flex;
+            align-items: center;
+            background-color: #f7f7f7;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            float: center;
+        }
+
+        .home-button {
+            position: absolute;
+            /* Posiciona el botón de manera absoluta dentro de .chat-header */
+            left: 15px;
+            /* Ajusta la distancia desde la izquierda */
+            color: #1f2937;
+            /* Color del ícono o texto */
+            text-decoration: none;
+            /* Elimina el subrayado del enlace */
+            font-size: 24px;
+        }
+
+        .home-button i {
+            font-size: 24px;
+            /* Tamaño del ícono */
+            transition: transform 0.3s ease;
+        }
+
+        .home-button:hover i {
+            transform: scale(1.2);
+            /* Efecto al pasar el cursor */
+        }
+
         /* Media Queries para Responsividad */
         @media (max-width: 768px) {
             .left-sidebar {
@@ -402,9 +519,11 @@
         }
 
         @media (max-width: 480px) {
+
             .left-sidebar.collapsed,
             .right-sidebar.collapsed {
-                width: 30px; /* Ancho aún más reducido */
+                width: 30px;
+                /* Ancho aún más reducido */
             }
 
             .toggle-button-left,
@@ -425,7 +544,7 @@
     <!-- Sidebar Izquierdo: Pacientes Recientes -->
     <div class="sidebar left-sidebar" id="recent-patients-sidebar">
         <button id="toggle-button-left" class="toggle-button toggle-button-left">
-            <img src="{% static 'images/arrow_right.png' %}" alt="Abrir Sidebar Pacientes Recientes" id="toggle-icon-left">
+            <img src="{% static 'images/arrow.png' %}" alt="Cerrar Sidebar Pacientes Recientes" id="toggle-icon-left">
         </button>
         <div class="sidebar-content">
             <h2>Pacientes Recientes</h2>
@@ -433,16 +552,26 @@
                 <!-- Aquí se insertarán los pacientes dinámicamente -->
             </div>
         </div>
+        <div class="user-info-container">
+            <div class="user-info">Gustavo Arnaldi Lopez</div>
+            <div class="dropdown-content">
+                <a href="#">Ajustes del usuario</a>
+                <a href="{% url 'logout' %}">Cerrar sesión</a>
+            </div>
+        </div>
     </div>
 
     <!-- Sidebar Derecho: Información del Paciente -->
-    
+
 
     <!-- Main Container -->
     <div class="main-container">
         <div class="chat-container">
             <div class="chat-header">
-                Chat con la IA
+                <a href="{% url 'home' %}" class="home-button" title="Volver al Inicio">
+                    <img src="{% static 'images/home.svg' %}">
+                </a>
+                <span class="chat-title">Chat con IA</span>
             </div>
             <div class="chat-history" id="chat-history">
                 <!-- Aquí se irán mostrando los mensajes -->
@@ -458,7 +587,8 @@
     </div>
     <div class="sidebar right-sidebar" id="patient-info-sidebar">
         <button id="toggle-button-right" class="toggle-button toggle-button-right">
-            <img src="{% static 'images/arrow_left.png' %}" alt="Cerrar Sidebar Información del Paciente" id="toggle-icon-right">
+            <img src="{% static 'images/arrow.png' %}" alt="Cerrar Sidebar Información del Paciente"
+                id="toggle-icon-right">
         </button>
         <div class="sidebar-content">
             <h2>Información del Paciente</h2>
@@ -486,19 +616,24 @@
                     <input type="text" id="diagnosis" name="diagnosis" value="{{ patient_data.diagnostico }}" required>
 
                     <label for="diagnosis_details">Detalles del Diagnóstico:</label>
-                    <textarea id="diagnosis_details" name="diagnosis_details" rows="3">{{ patient_data.diagnosis_details }}</textarea>
+                    <textarea id="diagnosis_details" name="diagnosis_details"
+                        rows="3">{{ patient_data.diagnosis_details }}</textarea>
 
                     <label for="additional_diagnosis">Diagnóstico Adicional:</label>
-                    <textarea id="additional_diagnosis" name="additional_diagnosis" rows="3">{{ patient_data.additional_diagnosis }}</textarea>
+                    <textarea id="additional_diagnosis" name="additional_diagnosis"
+                        rows="3">{{ patient_data.additional_diagnosis }}</textarea>
 
                     <input type="hidden" name="patient_id" value="{{ patient_data.id }}">
                 </form>
-                <button id="save-diagnosis" type="submit" data-patient-id="{{ patient_data.id }}">Guardar diagnóstico del paciente</button>
+                <button id="save-diagnosis" type="submit" data-patient-id="{{ patient_data.id }}">Guardar diagnóstico
+                    del paciente</button>
+                <button id="view-patient-info" type="submit" data-patient-id="{{ patient_data.id }}">Ver datos
+                    adicionales</button>
             </div>
         </div>
     </div>
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src=" https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
 
@@ -564,6 +699,25 @@
                 });
             });
 
+            function autoResizeTextarea(textarea) {
+                $(textarea).css('height', 'auto'); // Restablece la altura
+                var newHeight = textarea.scrollHeight;
+                var maxHeight = 150; // Debe coincidir con el max-height en CSS
+                if (newHeight > maxHeight) {
+                    newHeight = maxHeight;
+                    $(textarea).css('overflow-y', 'auto'); // Añade scroll si supera el max-height
+                } else {
+                    $(textarea).css('overflow-y', 'hidden'); // Oculta el scroll
+                }
+                $(textarea).css('height', newHeight + 'px'); // Asigna la nueva altura
+            }
+
+            // Aplica la función al cargar y al escribir en la textarea
+            $('#user_input').each(function () {
+                autoResizeTextarea(this);
+            }).on('input', function () {
+                autoResizeTextarea(this);
+            });
             // Función para actualizar pacientes recientes
             function updateRecentPatients() {
                 fetch('/get_recent_patients/')
@@ -620,31 +774,20 @@
             // Implementación del toggle del sidebar izquierdo (Pacientes Recientes)
             $('#toggle-button-left').on('click', function () {
                 $('#recent-patients-sidebar').toggleClass('collapsed');
-
-                // Cambiar la imagen de la flecha dependiendo del estado del sidebar izquierdo
+                // Las transformaciones de la flecha se manejan con CSS
                 if ($('#recent-patients-sidebar').hasClass('collapsed')) {
-                    // Al estar colapsado, la flecha apunta a la izquierda
-                    $('#toggle-icon-left').attr('src', '{% static "images/arrow_left.png" %}');
                     $('#toggle-icon-left').attr('alt', 'Abrir Sidebar Pacientes Recientes');
                 } else {
-                    // Al estar expandido, la flecha apunta a la derecha
-                    $('#toggle-icon-left').attr('src', '{% static "images/arrow_right.png" %}');
                     $('#toggle-icon-left').attr('alt', 'Cerrar Sidebar Pacientes Recientes');
                 }
             });
 
-            // Implementación del toggle del sidebar derecho (Información del Paciente)
+            // Toggle Sidebar Derecho
             $('#toggle-button-right').on('click', function () {
                 $('#patient-info-sidebar').toggleClass('collapsed');
-
-                // Cambiar la imagen de la flecha dependiendo del estado del sidebar derecho
                 if ($('#patient-info-sidebar').hasClass('collapsed')) {
-                    // Al estar colapsado, la flecha apunta a la derecha
-                    $('#toggle-icon-right').attr('src', '{% static "images/arrow_right.png" %}');
                     $('#toggle-icon-right').attr('alt', 'Abrir Sidebar Información del Paciente');
                 } else {
-                    // Al estar expandido, la flecha apunta a la izquierda
-                    $('#toggle-icon-right').attr('src', '{% static "images/arrow_left.png" %}');
                     $('#toggle-icon-right').attr('alt', 'Cerrar Sidebar Información del Paciente');
                 }
             });

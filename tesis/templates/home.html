@@ -323,6 +323,7 @@
             width: 50%;
             /* Aumenta el tamaño del modal para que se vea mejor */
             border-radius: 10px;
+            
         }
 
         .viewPatient {
@@ -333,6 +334,7 @@
             width: 40%;
             /* Aumenta el tamaño del modal para que se vea mejor */
             border-radius: 10px;
+            
         }
 
         .close {
@@ -376,11 +378,14 @@
 
         .pdf-button {
             padding: 10px 20px;
+            margin-top: 15px;
+            margin-right: 10px;
             background-color: #4e678b;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 15px;
             cursor: pointer;
+            float: right;
         }
 
         .pdf-button:hover {
@@ -439,7 +444,7 @@
         }
 
         .patient-details-container {
-            text-align: center;
+            text-align: left;
         }
 
         .patient-details-container .section-title {
@@ -447,6 +452,7 @@
             margin-top: 20px;
             margin-bottom: 10px;
             color: #333;
+            text-align: center;
         }
 
         .patient-details-container div {
@@ -711,8 +717,9 @@
     <div id="viewPatientModal" class="modal">
         <div class="viewPatient">
             <span class="close">&times;</span>
-            <h2>Datos del Paciente</h2>
             <button id="downloadPdfButton" class="pdf-button">Descargar PDF</button>
+            <h2>Datos del Paciente</h2>
+            
 
             <div class="patient-details-container" id="patient-details">
                 <div class="section-title">Información Personal</div>
@@ -721,8 +728,8 @@
                 <div><strong>Género:</strong> ${data.genre}</div>
                 <div><strong>Fecha de Nacimiento:</strong> ${data.birth_date}</div>
                 <div><strong>Edad:</strong> ${data.age}</div>
-
                 <div><strong>Correo Electrónico:</strong> ${data.email}</div>
+                
                 <div><strong>Teléfono:</strong> ${data.phone}</div>
                 <div><strong>Región:</strong> ${data.region}</div>
                 <div><strong>Ciudad:</strong> ${data.ciudad}</div>
