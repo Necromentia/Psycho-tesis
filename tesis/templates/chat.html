@@ -1,10 +1,12 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat con la IA</title>
+    <!-- No necesitas Font Awesome ya que usaremos imágenes personalizadas -->
     <style>
         body {
             margin: 0;
@@ -13,24 +15,110 @@
             background-color: #f0f0f0;
             color: #333;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: space-between; /* Distribuye los sidebars y el main-container */
+            align-items: stretch;
             height: 100vh;
             overflow: hidden;
         }
 
-        .main-container {
+        /* Estilos comunes para ambos sidebars */
+        .sidebar {
+            position: relative; /* Para posicionar el botón de toggle correctamente */
+            background-color: #1f2937;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
             display: flex;
-            width: 90%;
-            max-width: 1200px;
-            height: 90%;
-            margin: auto;
+            flex-direction: column;
             justify-content: space-between;
+            transition: width 0.3s ease;
+            overflow: hidden; /* Oculta el contenido cuando está cerrado */
         }
 
+        /* Sidebar Izquierdo */
+        .left-sidebar {
+            width: 25%; /* Ancho inicial */
+        }
+
+        /* Sidebar Derecho */
+        .right-sidebar {
+            width: 20%; /* Ancho inicial */
+        }
+
+        /* Estilos para los botones de toggle */
+        .toggle-button {
+            position: absolute;
+            top: 50%; /* Centra verticalmente */
+            transform: translateY(-50%); /* Ajusta la posición para centrar perfectamente */
+            background-color: #1f2937;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease, right 0.3s ease, left 0.3s ease;
+            z-index: 1000;
+            padding: 0; /* Elimina el padding para que la imagen ocupe todo el botón */
+        }
+
+        /* Toggle Button Izquierdo */
+        .toggle-button-left {
+            right: -12px; /* Posiciona el botón fuera del sidebar izquierdo */
+        }
+
+        /* Toggle Button Derecho */
+        .toggle-button-right {
+            left: -12px; /* Posiciona el botón fuera del sidebar derecho */
+        }
+
+        /* Imágenes de las flechas */
+        .toggle-button img {
+            width: 24px; /* Ajusta el tamaño según sea necesario */
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        /* Sidebar Colapsado Izquierdo */
+        .left-sidebar.collapsed {
+            width: 10px; /* Ancho reducido cuando está cerrado */
+        }
+
+        /* Sidebar Colapsado Derecho */
+        .right-sidebar.collapsed {
+            width: 10px; /* Ancho reducido cuando está cerrado */
+        }
+
+        /* Oculta el contenido textual cuando el sidebar está cerrado */
+        .sidebar .sidebar-content {
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+        }
+
+        .left-sidebar.collapsed .sidebar-content,
+        .right-sidebar.collapsed .sidebar-content {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-20px); /* Desplaza ligeramente el contenido hacia la izquierda */
+        }
+
+        .sidebar:not(.collapsed) .sidebar-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        /* Main Container */
+        .main-container {
+            flex-grow: 1; /* Permite que el contenedor crezca para llenar el espacio disponible */
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto; /* Permite el desplazamiento vertical si el contenido es demasiado grande */
+        }
+
+        /* Chat Container */
         .chat-container {
             flex: 1;
-            max-width: 60%;
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
@@ -39,6 +127,7 @@
             height: 100%;
             margin-right: 20px;
             overflow: hidden;
+            overflow-y: auto;
         }
 
         .chat-header {
@@ -121,34 +210,28 @@
             cursor: not-allowed;
         }
 
-        .patient-info-container {
-            width: 35%;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            height: 100%;
+        /* Información del Paciente */
+        .patient-info-content {
+            /* Asegura que el contenido del sidebar derecho tenga un scroll si es necesario */
             overflow-y: auto;
+            max-height: calc(100vh - 80px); /* Ajusta según el padding y el tamaño del botón */
         }
 
-        .patient-info h3 {
+        .patient-info-content h2 {
             margin-top: 0;
             text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff;
+            font-size: 20px;
+            color: #ffffff;
         }
 
-        .patient-info p,
-        .patient-info label {
+        .patient-info-content p,
+        .patient-info-content label {
             margin-bottom: 10px;
-            font-size: 16px;
+            font-size: 14px;
+            color: #f0f4f8;
         }
 
-        .patient-info strong {
+        .patient-info-content strong {
             font-weight: bold;
         }
 
@@ -185,7 +268,7 @@
             color: white;
             border: none;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             text-align: center;
         }
@@ -193,10 +276,170 @@
         #save-diagnosis:hover {
             background-color: #218838;
         }
+
+        /* Pacientes Recientes */
+        .recent-patients {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #1f2937;
+        }
+
+        .recent-patients button {
+            padding: 10px;
+            background-color: #4e678b;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.3s ease;
+            color: #f0f4f8;
+            font-size: medium;
+        }
+
+        .recent-patients button:hover {
+            background-color: #181f2b;
+        }
+
+        /* Información del Usuario */
+        .user-info-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .user-info {
+            padding: 10px;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: medium;
+            width: 95%;
+            text-align: center;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background-color: #f0f0f0;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border-radius: 5px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        .user-info-container:hover .dropdown-content {
+            display: block;
+        }
+
+        .recent-patients-list {
+            margin-top: 20px;
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .recent-patients-list li {
+            background-color: #4e678b;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .recent-patients-list li:hover {
+            background-color: #181f2b;
+        }
+
+        /* Media Queries para Responsividad */
+        @media (max-width: 768px) {
+            .left-sidebar {
+                width: 25%;
+            }
+
+            .right-sidebar {
+                width: 20%;
+            }
+
+            .left-sidebar.collapsed,
+            .right-sidebar.collapsed {
+                width: 40px;
+            }
+
+            .main-container {
+                flex-direction: column;
+            }
+
+            .chat-container,
+            .patient-info-content {
+                max-width: 100%;
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .left-sidebar.collapsed,
+            .right-sidebar.collapsed {
+                width: 30px; /* Ancho aún más reducido */
+            }
+
+            .toggle-button-left,
+            .toggle-button-right {
+                width: 25px;
+                height: 25px;
+            }
+
+            .toggle-button img {
+                width: 24px;
+                height: 24px;
+            }
+        }
     </style>
 </head>
 
 <body>
+    <!-- Sidebar Izquierdo: Pacientes Recientes -->
+    <div class="sidebar left-sidebar" id="recent-patients-sidebar">
+        <button id="toggle-button-left" class="toggle-button toggle-button-left">
+            <img src="{% static 'images/arrow_right.png' %}" alt="Abrir Sidebar Pacientes Recientes" id="toggle-icon-left">
+        </button>
+        <div class="sidebar-content">
+            <h2>Pacientes Recientes</h2>
+            <div class="recent-patients" id="recent-patients">
+                <!-- Aquí se insertarán los pacientes dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Derecho: Información del Paciente -->
+    
+
+    <!-- Main Container -->
     <div class="main-container">
         <div class="chat-container">
             <div class="chat-header">
@@ -213,52 +456,49 @@
                 </form>
             </div>
         </div>
-        <div class="patient-info-container">
-            <div class="patient-info">
-                <h3>Datos del Paciente</h3>
-                <div id="patient-data">
-                    <p><strong>Nombre:</strong> {{ patient_data.first_name }} {{ patient_data.last_name }}</p>
-                    <p><strong>Fecha de Nacimiento:</strong> {{ patient_data.birth_date }}</p>
-                    <p><strong>Género:</strong> {{ patient_data.genre }}</p>
+    </div>
+    <div class="sidebar right-sidebar" id="patient-info-sidebar">
+        <button id="toggle-button-right" class="toggle-button toggle-button-right">
+            <img src="{% static 'images/arrow_left.png' %}" alt="Cerrar Sidebar Información del Paciente" id="toggle-icon-right">
+        </button>
+        <div class="sidebar-content">
+            <h2>Información del Paciente</h2>
+            <div class="patient-info-content" id="patient-info-content">
+                <!-- Aquí se insertará la información del paciente dinámicamente -->
+                <p><strong>Nombre:</strong> {{ patient_data.first_name }} {{ patient_data.last_name }}</p>
+                <p><strong>Fecha de Nacimiento:</strong> {{ patient_data.birth_date }}</p>
+                <p><strong>Género:</strong> {{ patient_data.genre }}</p>
 
-                    <h4>Síntomas</h4>
-                    <p><strong>Físicos:</strong> {{ patient_data.sintomas.fisicos }}</p>
-                    <p><strong>Funcionamiento social:</strong> {{ patient_data.sintomas.sociales }}</p>
-                    <p><strong>Emocionales:</strong> {{ patient_data.sintomas.emocionales }}</p>
-                    <p><strong>Comportamiento:</strong> {{ patient_data.sintomas.comportamiento }}</p>
+                <h4>Síntomas</h4>
+                <p><strong>Físicos:</strong> {{ patient_data.sintomas.fisicos }}</p>
+                <p><strong>Funcionamiento social:</strong> {{ patient_data.sintomas.sociales }}</p>
+                <p><strong>Emocionales:</strong> {{ patient_data.sintomas.emocionales }}</p>
+                <p><strong>Comportamiento:</strong> {{ patient_data.sintomas.comportamiento }}</p>
 
-                    <h4>Historial Médico</h4>
-                    <p><strong>Historial Personal:</strong> {{ patient_data.medical_history.personal }}</p>
-                    <p><strong>Historial Familiar:</strong> {{ patient_data.medical_history.family }}</p>
-                    <p><strong>Historial Clínico:</strong> {{ patient_data.medical_history.clinical }}</p>
+                <h4>Historial Médico</h4>
+                <p><strong>Historial Personal:</strong> {{ patient_data.medical_history.personal }}</p>
+                <p><strong>Historial Familiar:</strong> {{ patient_data.medical_history.family }}</p>
+                <p><strong>Historial Clínico:</strong> {{ patient_data.medical_history.clinical }}</p>
 
-                    <h4>Diagnóstico Previo</h4>
-                    <form id="update-diagnosis-form" class="diagnosis-section">
-                        {% csrf_token %}
-                        <label for="diagnosis">Hipotesis diagnóstica:</label>
-                        <input type="text" id="diagnosis" name="diagnosis" value="{{ patient_data.diagnostico }}"
-                            required>
+                <h4>Diagnóstico Previo</h4>
+                <form id="update-diagnosis-form" class="diagnosis-section">
+                    {% csrf_token %}
+                    <label for="diagnosis">Hipótesis diagnóstica:</label>
+                    <input type="text" id="diagnosis" name="diagnosis" value="{{ patient_data.diagnostico }}" required>
 
-                        <label for="diagnosis_details">Detalles del Diagnóstico:</label>
-                        <textarea id="diagnosis_details" name="diagnosis_details"
-                            rows="3">{{ patient_data.diagnosis_details }}</textarea>
+                    <label for="diagnosis_details">Detalles del Diagnóstico:</label>
+                    <textarea id="diagnosis_details" name="diagnosis_details" rows="3">{{ patient_data.diagnosis_details }}</textarea>
 
-                        <label for="additional_diagnosis">Diagnóstico Adicional:</label>
-                        <textarea id="additional_diagnosis" name="additional_diagnosis"
-                            rows="3">{{ patient_data.additional_diagnosis }}</textarea>
+                    <label for="additional_diagnosis">Diagnóstico Adicional:</label>
+                    <textarea id="additional_diagnosis" name="additional_diagnosis" rows="3">{{ patient_data.additional_diagnosis }}</textarea>
 
-                        <input type="hidden" name="patient_id" value="{{ patient_data.id }}">
-                    </form>
-
-                </div>
-            </div>
-            <div class="diagnosis-input">
-                <button id="save-diagnosis" type="submit" data-patient-id="{{ patient_data.id }}">Guardar diagnóstico
-                    del paciente</button>
+                    <input type="hidden" name="patient_id" value="{{ patient_data.id }}">
+                </form>
+                <button id="save-diagnosis" type="submit" data-patient-id="{{ patient_data.id }}">Guardar diagnóstico del paciente</button>
             </div>
         </div>
     </div>
-
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
@@ -325,6 +565,33 @@
                 });
             });
 
+            // Función para actualizar pacientes recientes
+            function updateRecentPatients() {
+                fetch('/get_recent_patients/')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Datos recibidos:', data);
+                        const recentPatientsContainer = document.getElementById('recent-patients');
+                        recentPatientsContainer.innerHTML = '';
+
+                        data.recent_patients.forEach(patient => {
+                            const patientElement = document.createElement('button');
+                            patientElement.textContent = `${patient.name} - ${patient.diagnosis}`;
+                            patientElement.setAttribute('data-patient-id', patient.id);
+
+                            // Evento para redirigir al chat con la IA
+                            patientElement.addEventListener('click', function () {
+                                window.location.href = `/chat?patient_id=${patient.id}`;
+                            });
+
+                            recentPatientsContainer.appendChild(patientElement);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            updateRecentPatients();
+
             // Manejo del token CSRF para las solicitudes AJAX
             function getCookie(name) {
                 let cookieValue = null;
@@ -348,6 +615,38 @@
                     if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type) && !this.crossDomain) {
                         xhr.setRequestHeader("X-CSRFToken", csrftoken);
                     }
+                }
+            });
+
+            // Implementación del toggle del sidebar izquierdo (Pacientes Recientes)
+            $('#toggle-button-left').on('click', function () {
+                $('#recent-patients-sidebar').toggleClass('collapsed');
+
+                // Cambiar la imagen de la flecha dependiendo del estado del sidebar izquierdo
+                if ($('#recent-patients-sidebar').hasClass('collapsed')) {
+                    // Al estar colapsado, la flecha apunta a la izquierda
+                    $('#toggle-icon-left').attr('src', '{% static "images/arrow_left.png" %}');
+                    $('#toggle-icon-left').attr('alt', 'Abrir Sidebar Pacientes Recientes');
+                } else {
+                    // Al estar expandido, la flecha apunta a la derecha
+                    $('#toggle-icon-left').attr('src', '{% static "images/arrow_right.png" %}');
+                    $('#toggle-icon-left').attr('alt', 'Cerrar Sidebar Pacientes Recientes');
+                }
+            });
+
+            // Implementación del toggle del sidebar derecho (Información del Paciente)
+            $('#toggle-button-right').on('click', function () {
+                $('#patient-info-sidebar').toggleClass('collapsed');
+
+                // Cambiar la imagen de la flecha dependiendo del estado del sidebar derecho
+                if ($('#patient-info-sidebar').hasClass('collapsed')) {
+                    // Al estar colapsado, la flecha apunta a la derecha
+                    $('#toggle-icon-right').attr('src', '{% static "images/arrow_right.png" %}');
+                    $('#toggle-icon-right').attr('alt', 'Abrir Sidebar Información del Paciente');
+                } else {
+                    // Al estar expandido, la flecha apunta a la izquierda
+                    $('#toggle-icon-right').attr('src', '{% static "images/arrow_left.png" %}');
+                    $('#toggle-icon-right').attr('alt', 'Cerrar Sidebar Información del Paciente');
                 }
             });
 

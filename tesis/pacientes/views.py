@@ -262,6 +262,8 @@ def get_response(request):
 def chat_view(request):
     patient_id = request.GET.get('patient_id')
     patient_data = None
+    recent_patients = Patient.objects.filter(assigned_user=request.user, last_view_at__isnull=False).order_by('-last_view_at')[:10]
+
 
     if patient_id:
         patient = get_object_or_404(Patient, id=patient_id)
@@ -296,6 +298,7 @@ def chat_view(request):
 
     return render(request, 'chat.html', {
         'patient_data': patient_data,
+        'recent_patients': recent_patients,
     })
 @csrf_exempt
 def assign_patient_to_folder(request):
