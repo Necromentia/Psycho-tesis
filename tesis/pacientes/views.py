@@ -163,27 +163,31 @@ def get_patient(request, patient_id):
 @csrf_exempt
 def update_diagnosis(request, patient_id):
     if request.method == 'POST':
-        diagnosis = request.POST.get('diagnosis')
-        diagnosis_details = request.POST.get('diagnosis_details')
-        additional_diagnosis = request.POST.get('additional_diagnosis')
-
-        if not diagnosis:
-            return JsonResponse({'error': 'Faltan campos requeridos'}, status=400)
-
         try:
-            patient = Patient.objects.get(id=patient_id)
-            diagnosis_obj, created = Diagnosis.objects.get_or_create(patient=patient)
-            diagnosis_obj.diagnosis = diagnosis
-            diagnosis_obj.details = diagnosis_details
-            diagnosis_obj.additional_diagnosis = additional_diagnosis
-            diagnosis_obj.save()
+            data = json.loads(request.body)  # Cargar el JSON del cuerpo de la petición
 
-            # Redirigir a la página de inicio después de la actualización
-            return HttpResponseRedirect(reverse('home'))
-        except Patient.DoesNotExist:
-            return JsonResponse({'error': 'Paciente no encontrado'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            diagnosis = data.get('diagnosis')
+            diagnosis_details = data.get('diagnosis_details')
+            additional_diagnosis = data.get('additional_diagnosis')
+
+            if not diagnosis:
+                return JsonResponse({'error': 'Faltan campos requeridos'}, status=400)
+
+            try:
+                patient = Patient.objects.get(id=patient_id)
+                diagnosis_obj, created = Diagnosis.objects.get_or_create(patient=patient)
+                diagnosis_obj.diagnosis = diagnosis
+                diagnosis_obj.details = diagnosis_details
+                diagnosis_obj.additional_diagnosis = additional_diagnosis
+                diagnosis_obj.save()
+
+                return JsonResponse({'message': 'Diagnóstico actualizado correctamente'}, status=200)
+            except Patient.DoesNotExist:
+                return JsonResponse({'error': 'Paciente no encontrado'}, status=404)
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=500)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Error al decodificar el JSON'}, status=400)
     else:
         return JsonResponse({'error': 'Método no permitido'}, status=405)
 def delete_patient(request, patient_id):
