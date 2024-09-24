@@ -444,8 +444,12 @@
         }
 
         .patient-details-container {
-            text-align: left;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
         }
+
 
         .patient-details-container .section-title {
             font-size: 18px;
@@ -457,6 +461,12 @@
 
         .patient-details-container div {
             margin-bottom: 10px;
+        }
+
+        .patient-details-container strong {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
         }
 
         .section-title {
