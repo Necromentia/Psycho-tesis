@@ -1,0 +1,1096 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat con la IA</title>
+    <!-- No necesitas Font Awesome ya que usaremos imágenes personalizadas -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            /* Distribuye los sidebars y el main-container */
+            align-items: stretch;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Estilos comunes para ambos sidebars */
+        .sidebar {
+            position: relative;
+            /* Para posicionar el botón de toggle correctamente */
+            background-color: #1f2937;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: width 0.3s ease;
+            overflow: hidden;
+            /* Oculta el contenido cuando está cerrado */
+        }
+
+        .sidebar h2 {
+            margin: 0 0 20px;
+            font-size: 18px;
+            color: #f0f4f8;
+        }
+
+        /* Sidebar Izquierdo */
+        .left-sidebar {
+            width: 20%;
+            /* Ancho inicial */
+        }
+
+        /* Sidebar Derecho */
+        .right-sidebar {
+            width: 20%;
+            /* Ancho inicial */
+        }
+
+        /* Estilos para los botones de toggle */
+        .toggle-button {
+            position: absolute;
+            top: 10px;
+            /* Ajusta según tu diseño */
+            background-color: transparent;
+            /* Fondo transparente para solo mostrar el ícono */
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            /* Tamaño del ícono */
+            height: 24px;
+            /* Elimina el padding para que la imagen ocupe todo el botón */
+        }
+
+        /* Toggle Button Izquierdo */
+        .toggle-button-left {
+            right: 10px;
+            /* Posiciona el botón fuera del sidebar izquierdo */
+        }
+
+        /* Toggle Button Derecho */
+        .toggle-button-right {
+            right: 10px;
+            /* Posiciona el botón fuera del sidebar derecho */
+        }
+
+        /* Imágenes de las flechas */
+        .toggle-button img {
+            width: 24px;
+            /* Ajusta el tamaño según sea necesario */
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar:not(.collapsed) .toggle-button img {
+            transform: rotate(180deg);
+        }
+
+        .sidebar.collapsed .toggle-button img {
+            transform: rotate(0deg);
+        }
+
+        .right-sidebar:not(.collapsed) .toggle-button-right img {
+            transform: rotate(0deg);
+            /* Flecha apuntando a la izquierda */
+            transition: transform 0.3s ease;
+        }
+
+        .right-sidebar.collapsed .toggle-button-right img {
+            transform: rotate(180deg);
+            /* Flecha apuntando a la derecha */
+            transition: transform 0.3s ease;
+        }
+
+        /* Sidebar Colapsado Izquierdo */
+        .left-sidebar.collapsed {
+            width: 10px;
+            /* Ancho reducido cuando está cerrado */
+        }
+
+        /* Sidebar Colapsado Derecho */
+        .right-sidebar.collapsed {
+            width: 10px;
+            /* Ancho reducido cuando está cerrado */
+        }
+
+        .sidebar .sidebar-content,
+        .left-sidebar .user-info-container {
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+        }
+
+        /* Estado Colapsado */
+        .left-sidebar.collapsed .sidebar-content,
+        .left-sidebar.collapsed .user-info-container,
+        .right-sidebar.collapsed .sidebar-content {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-20px);
+            /* Opcional: desplaza el contenido hacia la izquierda */
+        }
+
+        /* Estado Expandido */
+        .sidebar:not(.collapsed) .sidebar-content,
+        .left-sidebar:not(.collapsed) .user-info-container {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        /* Main Container */
+        .main-container {
+            flex-grow: 1;
+            /* Permite que el contenedor crezca para llenar el espacio disponible */
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            /* Permite el desplazamiento vertical si el contenido es demasiado grande */
+        }
+
+        /* Chat Container */
+        .chat-container {
+            flex: 1;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            margin-right: 20px;
+            overflow: hidden;
+            overflow-y: auto;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Centra los elementos horizontalmente */
+            position: relative;
+            /* Necesario para posicionar el botón absoluto */
+            background-color: #f7f7f7;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .chat-history {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+
+        .chat-history .message {
+            margin-bottom: 15px;
+        }
+
+        .chat-history .user-message span,
+        .chat-history .bot-message span {
+            display: inline-block;
+            padding: 10px;
+            border-radius: 20px;
+            max-width: 70%;
+            white-space: pre-wrap;
+        }
+
+        .chat-history .user-message span {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .chat-history .bot-message span {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background-color: #f7f7f7;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input form {
+            display: flex;
+            align-items: flex-end;
+            /* Alinea el botón de enviar al final de la textarea */
+
+            width: 100%;
+        }
+
+        .chat-input textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background-color: #fff;
+            color: #333;
+            resize: none;
+            /* Opcional: evita que el usuario cambie el tamaño manualmente */
+            min-height: 50px;
+            /* Altura mínima */
+            max-height: 150px;
+            /* Altura máxima antes de mostrar scroll */
+            overflow: hidden;
+            /* Oculta la barra de desplazamiento */
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        .chat-input button:disabled {
+            background-color: #b0b0b0;
+            cursor: not-allowed;
+        }
+
+        /* Información del Paciente */
+        .patient-info-content {
+            /* Asegura que el contenido del sidebar derecho tenga un scroll si es necesario */
+            overflow-y: auto;
+            max-height: calc(100vh - 80px);
+            /* Ajusta según el padding y el tamaño del botón */
+        }
+
+        .patient-info-content h2 {
+            margin-top: 0;
+            text-align: center;
+            font-size: 20px;
+            color: #ffffff;
+        }
+
+        .patient-info-content h4 {
+            margin-top: 0;
+            font-size: 16px;
+            color: #ffffff;
+        }
+
+
+        .patient-info-content p,
+        .patient-info-content label {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #f0f4f8;
+        }
+
+        .patient-info-content strong {
+            font-weight: bold;
+        }
+
+        .diagnosis-section {
+            margin-top: 20px;
+        }
+
+        .diagnosis-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .diagnosis-section input[type="text"],
+        .diagnosis-section textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+
+        .diagnosis-section textarea {
+            resize: vertical;
+        }
+
+        #save-diagnosis,
+        #view-patient-info {
+            display: left;
+            margin-top: 20px;
+            padding: 15px;
+            width: 40%;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+
+        }
+
+        #save-diagnosis {
+            float: left;
+        }
+
+        #save-diagnosis:hover {
+            background-color: #218838;
+        }
+
+        #view-patient-info {
+            float: right;
+        }
+
+        #view-patient-info:hover {
+            background-color: #218838;
+        }
+
+
+        /* Pacientes Recientes */
+        .recent-patients {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #1f2937;
+        }
+
+        .recent-patients button {
+            padding: 10px;
+            background-color: #4e678b;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.3s ease;
+            color: #f0f4f8;
+            font-size: medium;
+        }
+
+        .recent-patients button:hover {
+            background-color: #181f2b;
+        }
+
+        /* Información del Usuario */
+        .user-info-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+        }
+
+        .user-info {
+            padding: 10px;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: medium;
+            width: 95%;
+            text-align: center;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background-color: #f0f0f0;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border-radius: 5px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        .user-info-container:hover .dropdown-content {
+            display: block;
+        }
+
+        .recent-patients-list {
+            margin-top: 20px;
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .recent-patients-list li {
+            background-color: #4e678b;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .recent-patients-list li:hover {
+            background-color: #181f2b;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            background-color: #f7f7f7;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            float: center;
+        }
+
+        .home-button {
+            position: absolute;
+            /* Posiciona el botón de manera absoluta dentro de .chat-header */
+            left: 15px;
+            /* Ajusta la distancia desde la izquierda */
+            color: #1f2937;
+            /* Color del ícono o texto */
+            text-decoration: none;
+            /* Elimina el subrayado del enlace */
+            font-size: 24px;
+        }
+
+        .home-button i {
+            font-size: 24px;
+            /* Tamaño del ícono */
+            transition: transform 0.3s ease;
+        }
+
+        .home-button:hover i {
+            transform: scale(1.2);
+            /* Efecto al pasar el cursor */
+        }
+
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 1;
+            /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0);
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            /* Could be more or less, depending on screen size */
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .viewPatient {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 40%;
+            /* Aumenta el tamaño del modal para que se vea mejor */
+            border-radius: 10px;
+
+        }
+
+        .patient-details-container {
+            text-align: left;
+        }
+
+        .patient-details-container .section-title {
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+        }
+
+        .patient-details-container div {
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            grid-column: span 2;
+            font-size: 18px;
+            margin-top: 20px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+        }
+        /* Media Queries para Responsividad */
+        @media (max-width: 768px) {
+            .left-sidebar {
+                width: 25%;
+            }
+
+            .right-sidebar {
+                width: 20%;
+            }
+
+            .left-sidebar.collapsed,
+            .right-sidebar.collapsed {
+                width: 40px;
+            }
+
+            .main-container {
+                flex-direction: column;
+            }
+
+            .chat-container,
+            .patient-info-content {
+                max-width: 100%;
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            .left-sidebar.collapsed,
+            .right-sidebar.collapsed {
+                width: 30px;
+                /* Ancho aún más reducido */
+            }
+
+            .toggle-button-left,
+            .toggle-button-right {
+                width: 25px;
+                height: 25px;
+            }
+
+            .toggle-button img {
+                width: 24px;
+                height: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar Izquierdo: Pacientes Recientes -->
+    <div class="sidebar left-sidebar" id="recent-patients-sidebar">
+        <button id="toggle-button-left" class="toggle-button toggle-button-left">
+            <img src="{% static 'images/arrow.png' %}" alt="Cerrar Sidebar Pacientes Recientes" id="toggle-icon-left">
+        </button>
+        <div class="sidebar-content">
+            <h2>Pacientes Recientes</h2>
+            <div class="recent-patients" id="recent-patients">
+                <!-- Aquí se insertarán los pacientes dinámicamente -->
+            </div>
+        </div>
+        <div class="user-info-container">
+            <div class="user-info">Gustavo Arnaldi Lopez</div>
+            <div class="dropdown-content">
+                <a href="#">Ajustes del usuario</a>
+                <a href="{% url 'logout' %}">Cerrar sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Derecho: Información del Paciente -->
+
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <a href="{% url 'home' %}" class="home-button" title="Volver al Inicio">
+                    <img src="{% static 'images/home.svg' %}">
+                </a>
+                <span class="chat-title">Chat con IA</span>
+            </div>
+            <div class="chat-history" id="chat-history">
+                <!-- Aquí se irán mostrando los mensajes -->
+            </div>
+            <div class="chat-input">
+                <form id="chat-form">
+                    {% csrf_token %}
+                    <textarea id="user_input" name="user_input" placeholder="Escribe tu mensaje..."></textarea>
+                    <button type="submit" id="send-button">Enviar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="sidebar right-sidebar" id="patient-info-sidebar">
+        <button id="toggle-button-right" class="toggle-button toggle-button-right">
+            <img src="{% static 'images/arrow.png' %}" alt="Cerrar Sidebar Información del Paciente"
+                id="toggle-icon-right">
+        </button>
+        <div class="sidebar-content">
+            <h2>Información del Paciente</h2>
+            <div class="patient-info-content" id="patient-info-content">
+                <!-- Aquí se insertará la información del paciente dinámicamente -->
+                <p><strong>Nombre:</strong> {{ patient_data.first_name }} {{ patient_data.last_name }}</p>
+                <p><strong>Fecha de Nacimiento:</strong> {{ patient_data.birth_date }}</p>
+                <p><strong>Género:</strong> {{ patient_data.genre }}</p>
+
+                <h4>Síntomas</h4>
+                <p><strong>Físicos:</strong> {{ patient_data.sintomas.fisicos }}</p>
+                <p><strong>Funcionamiento social:</strong> {{ patient_data.sintomas.sociales }}</p>
+                <p><strong>Emocionales:</strong> {{ patient_data.sintomas.emocionales }}</p>
+                <p><strong>Comportamiento:</strong> {{ patient_data.sintomas.comportamiento }}</p>
+
+                <h4>Historial Médico</h4>
+                <p><strong>Historial Personal:</strong> {{ patient_data.medical_history.personal }}</p>
+                <p><strong>Historial Familiar:</strong> {{ patient_data.medical_history.family }}</p>
+                <p><strong>Historial Clínico:</strong> {{ patient_data.medical_history.clinical }}</p>
+
+                <h4>Diagnóstico Previo</h4>
+                <form id="update-diagnosis-form" class="diagnosis-section">
+                    {% csrf_token %}
+                    <label for="diagnosis">Hipótesis diagnóstica:</label>
+                    <input type="text" id="diagnosis" name="diagnosis" value="{{ patient_data.diagnostico }}" required>
+
+                    <label for="diagnosis_details">Detalles del Diagnóstico:</label>
+                    <textarea id="diagnosis_details" name="diagnosis_details"
+                        rows="3">{{ patient_data.diagnosis_details }}</textarea>
+
+                    <label for="additional_diagnosis">Diagnóstico Adicional:</label>
+                    <textarea id="additional_diagnosis" name="additional_diagnosis"
+                        rows="3">{{ patient_data.additional_diagnosis }}</textarea>
+
+                    <input type="hidden" name="patient_id" value="{{ patient_data.id }}">
+                </form>
+                <button id="save-diagnosis" data-patient-id="{{ patient.id }}">Guardar diagnóstico
+                    del paciente</button>
+                <button id="view-patient-info" class="view-patient-info">Ver datos adicionales</button>
+            </div>
+        </div>
+        <div id="viewPatientModal" class="modal">
+            <div class="viewPatient">
+                <span class="close">&times;</span>
+                <button id="downloadPdfButton" class="pdf-button">Editar datos paciente</button>
+                <h2>Datos del Paciente</h2>
+
+
+                <div class="patient-details-container" id="patient-details">
+                    <div class="section-title">Información Personal</div>
+                    <div><strong>Nombre:</strong> ${data.first_name} ${data.last_name}</div>
+                    <div><strong>Rut:</strong> ${data.rut}</div>
+                    <div><strong>Género:</strong> ${data.genre}</div>
+                    <div><strong>Fecha de Nacimiento:</strong> ${data.birth_date}</div>
+                    <div><strong>Edad:</strong> ${data.age}</div>
+                    <div><strong>Correo Electrónico:</strong> ${data.email}</div>
+
+                    <div><strong>Teléfono:</strong> ${data.phone}</div>
+                    <div><strong>Región:</strong> ${data.region}</div>
+                    <div><strong>Ciudad:</strong> ${data.ciudad}</div>
+                    <div><strong>Comuna:</strong> ${data.comuna}</div>
+                    <div><strong>Centro de salud al que pertenece:</strong> ${data.centro_de_salud}</div>
+
+
+                    <div class="section-title">Historial Médico</div>
+                    <div><strong>Historial Personal:</strong> ${data.personal_history || 'No hay historial personal'}
+                    </div>
+                    <div><strong>Historial Familiar:</strong> ${data.family_history || 'No hay historial familiar'}
+                    </div>
+                    <div><strong>Historial Clínico:</strong> ${data.clinical_history || 'No hay historial clínico'}
+                    </div>
+
+                    <div class="section-title">Síntomas</div>
+                    <div><strong>Síntomas Físicos:</strong> ${data.physical_symptoms || 'No hay síntomas físicos'}</div>
+                    <div><strong>Funcionamiento social:</strong> ${data.social_symptoms || 'No hay síntomas sociales'}
+                    </div>
+                    <div><strong>Síntomas Emocionales:</strong> ${data.emotional_symptoms || 'No hay síntomas
+                        emocionales'}
+                    </div>
+                    <div><strong>Síntomas de Comportamiento:</strong> ${data.behavioral_symptoms || 'No hay síntomas de
+                        comportamiento'}</div>
+
+                    <div class="section-title">Hipotesis diagnóstica</div>
+                    <div><strong>Hipotesis diagnóstica:</strong> ${data.diagnosis || 'Sin diagnóstico'}</div>
+                    <div><strong>Diagnóstico detalles:</strong> ${data.diagnosis_details || 'No hay detalles'}</div>
+                    <div><strong>Diagnóstico adicional:</strong> ${data.additional_diagnosis || 'No hay diagnósticos
+                        adicionales'}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Scripts -->
+    <script src=" https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Seleccionar elementos del DOM
+            const viewPatientModal = document.getElementById('viewPatientModal');
+            const btn = document.getElementById('view-patient-info');
+            const span = document.querySelector('.close');
+            const editPatientButton = document.getElementById('edit-patient-button');
+            const chatForm = document.getElementById('chat-form');
+            const userInput = document.getElementById('user_input');
+            const chatHistory = document.getElementById('chat-history');
+            const sendButton = document.getElementById('send-button');
+            const saveDiagnosisButton = document.getElementById('save-diagnosis');
+            const recentPatientsContainer = document.getElementById('recent-patients');
+            const toggleButtonLeft = document.getElementById('toggle-button-left');
+            const toggleIconLeft = document.getElementById('toggle-icon-left');
+            const toggleButtonRight = document.getElementById('toggle-button-right');
+            const toggleIconRight = document.getElementById('toggle-icon-right');
+
+            // Función para obtener el valor de una cookie por su nombre
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            const csrftoken = getCookie('csrftoken');
+
+            // Función para auto-ajustar la altura de una textarea
+            function autoResizeTextarea(textarea) {
+                textarea.style.height = 'auto'; // Restablece la altura
+                let newHeight = textarea.scrollHeight;
+                const maxHeight = 150; // Debe coincidir con el max-height en CSS
+                if (newHeight > maxHeight) {
+                    newHeight = maxHeight;
+                    textarea.style.overflowY = 'auto'; // Añade scroll si supera el max-height
+                } else {
+                    textarea.style.overflowY = 'hidden'; // Oculta el scroll
+                }
+                textarea.style.height = newHeight + 'px'; // Asigna la nueva altura
+            }
+
+            // Aplicar auto-resize al cargar y al escribir en la textarea
+            if (userInput) {
+                autoResizeTextarea(userInput);
+                userInput.addEventListener('input', function () {
+                    autoResizeTextarea(userInput);
+                });
+            }
+
+            // Abrir el modal al hacer clic en el botón "Ver Datos Adicionales"
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    viewPatientModal.style.display = 'block';
+                    const patientId = document.querySelector('input[name="patient_id"]').value;
+                    viewPatient(patientId);
+                });
+            }
+
+            // Cerrar el modal al hacer clic en la 'x'
+            if (span) {
+                span.addEventListener('click', function () {
+                    viewPatientModal.style.display = 'none';
+                });
+            }
+
+            // Cerrar el modal al hacer clic fuera de él
+            window.addEventListener('click', function (event) {
+                if (event.target === viewPatientModal) {
+                    viewPatientModal.style.display = 'none';
+                }
+            });
+
+            // Manejar la apertura del modal al hacer clic en "Ver Detalles"
+            document.addEventListener('click', function (event) {
+                if (event.target.classList.contains('view-button')) {
+                    const patientId = event.target.closest('tr').getAttribute('data-patient-id');
+                    viewPatient(patientId);
+                }
+            });
+
+            // Función para obtener y mostrar los detalles del paciente
+            function viewPatient(patientId) {
+                fetch(`/get_patient/${patientId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error en la respuesta de la red');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const patientDetails = document.getElementById('patient-details');
+                        if (patientDetails) {
+                            patientDetails.innerHTML = `
+                        <div class="section-title">Información Personal</div>
+                        <div><strong>Nombre:</strong> ${data.first_name} ${data.last_name}</div>
+                        <div><strong>Género:</strong> ${data.genre}</div>
+                        <div><strong>Fecha de Nacimiento:</strong> ${data.birth_date}</div>
+                        <div><strong>Edad:</strong> ${data.age}</div>
+                        <div><strong>Correo Electrónico:</strong> ${data.email}</div>
+                        <div><strong>Teléfono:</strong> ${data.phone}</div>
+                        <div><strong>Región:</strong> ${data.region}</div>
+                        <div><strong>Ciudad:</strong> ${data.ciudad}</div>
+                        <div><strong>Comuna:</strong> ${data.comuna}</div>
+                        <div><strong>Centro de salud al que pertenece:</strong> ${data.centro_de_salud}</div>
+
+                        <div class="section-title">Historial Médico</div>
+                        <div><strong>Historial Personal:</strong> ${data.personal_history || 'No hay historial personal'}</div>
+                        <div><strong>Historial Familiar:</strong> ${data.family_history || 'No hay historial familiar'}</div>
+                        <div><strong>Historial Clínico:</strong> ${data.clinical_history || 'No hay historial clínico'}</div>
+
+                        <div class="section-title">Síntomas</div>
+                        <div><strong>Síntomas Físicos:</strong> ${data.physical_symptoms || 'No hay síntomas físicos'}</div>
+                        <div><strong>Funcionamiento social:</strong> ${data.social_symptoms || 'No hay síntomas sociales'}</div>
+                        <div><strong>Síntomas Emocionales:</strong> ${data.emotional_symptoms || 'No hay síntomas emocionales'}</div>
+                        <div><strong>Síntomas de Comportamiento:</strong> ${data.behavioral_symptoms || 'No hay síntomas de comportamiento'}</div>
+
+                        <div class="section-title">Hipótesis Diagnóstica</div>
+                        <div><strong>Hipótesis diagnóstica:</strong> ${data.diagnosis || 'Sin diagnóstico'}</div>
+                        <div><strong>Diagnóstico detalles:</strong> ${data.diagnosis_details || 'No hay detalles'}</div>
+                        <div><strong>Diagnóstico adicional:</strong> ${data.aditional_diagnosis || 'No hay diagnósticos adicionales'}</div>
+                    `;
+                        }
+
+                        // Configurar el enlace del botón de editar
+                        if (editPatientButton) {
+                            editPatientButton.href = `/editar-paciente/${patientId}/`; // Ajusta la URL según tu configuración
+                        }
+
+                        // Abrir el modal
+                        viewPatientModal.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al obtener los detalles del paciente.');
+                    });
+            }
+
+            // Manejo del formulario de chat
+            if (chatForm) {
+                chatForm.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    const user_input = userInput.value.trim();
+                    if (user_input === '') {
+                        alert('Por favor, ingresa un mensaje.');
+                        return;
+                    }
+                    // Deshabilitar el botón de enviar
+                    sendButton.disabled = true;
+
+                    fetch('{% url "get_response" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: JSON.stringify({
+                            'user_input': user_input
+                        })
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error en la respuesta de la red');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            // Crear y agregar el mensaje del usuario
+                            const userMessage = document.createElement('div');
+                            userMessage.classList.add('message', 'user-message');
+                            userMessage.innerHTML = `<span>Tú: ${user_input}</span>`;
+                            chatHistory.appendChild(userMessage);
+
+                            // Crear y agregar el mensaje de la IA
+                            const botMessage = document.createElement('div');
+                            botMessage.classList.add('message', 'bot-message');
+                            botMessage.innerHTML = `<span>IA: ${data.response}</span>`;
+                            chatHistory.appendChild(botMessage);
+
+                            // Limpiar el input y ajustar el scroll
+                            userInput.value = '';
+                            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                            // Habilitar el botón de enviar
+                            sendButton.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            // Mostrar mensaje de error en el chat
+                            const errorMessage = document.createElement('div');
+                            errorMessage.classList.add('message', 'bot-message');
+                            errorMessage.innerHTML = `<span>Error al enviar el mensaje.</span>`;
+                            chatHistory.appendChild(errorMessage);
+
+                            // Habilitar el botón de enviar
+                            sendButton.disabled = false;
+                        });
+                });
+            }
+            
+
+            if (saveDiagnosisButton) {
+                saveDiagnosisButton.addEventListener('click', function (event) {
+                    event.preventDefault(); // Evita el envío del formulario
+
+                    const diagnosis = document.getElementById('diagnosis').value.trim();
+                    const diagnosis_details = document.getElementById('diagnosis_details').value.trim();
+                    const additional_diagnosis = document.getElementById('additional_diagnosis').value.trim();
+                    const patient_id = document.querySelector('input[name="patient_id"]').value;
+
+                    // Validar campos
+                    if (diagnosis === '') {
+                        alert('Por favor, ingresa una hipótesis diagnóstica.');
+                        return;
+                    }
+
+                    fetch(`/update_diagnosis/${patient_id}/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken // Usar el token CSRF
+                        },
+                        body: JSON.stringify({
+                            'diagnosis': diagnosis,
+                            'diagnosis_details': diagnosis_details,
+                            'additional_diagnosis': additional_diagnosis
+                        })
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error en la respuesta de la red');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            alert('Diagnóstico actualizado correctamente');
+                            window.location.href = '{% url "home" %}';  // Redirigir a la página de inicio después de guardar
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Error al guardar el diagnóstico');
+                        });
+                });
+            }
+
+
+            // Función para actualizar pacientes recientes
+            function updateRecentPatients() {
+                fetch('/get_recent_patients/')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error en la respuesta de la red');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Datos recibidos:', data);
+                        if (recentPatientsContainer) {
+                            recentPatientsContainer.innerHTML = '';
+
+                            data.recent_patients.forEach(patient => {
+                                const patientElement = document.createElement('button');
+                                patientElement.textContent = `${patient.name} - ${patient.diagnosis}`;
+                                patientElement.setAttribute('data-patient-id', patient.id);
+                                patientElement.classList.add('recent-patient-button');
+
+                                // Evento para redirigir al chat con la IA
+                                patientElement.addEventListener('click', function () {
+                                    window.location.href = `/chat?patient_id=${patient.id}`;
+                                });
+
+                                recentPatientsContainer.appendChild(patientElement);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            updateRecentPatients();
+
+            // Implementación del toggle del sidebar izquierdo (Pacientes Recientes)
+            if (toggleButtonLeft && toggleIconLeft) {
+                toggleButtonLeft.addEventListener('click', function () {
+                    const sidebar = document.getElementById('recent-patients-sidebar');
+                    sidebar.classList.toggle('collapsed');
+                    // Cambiar el ícono de la flecha
+                    if (sidebar.classList.contains('collapsed')) {
+                        toggleIconLeft.classList.remove('fa-arrow-right');
+                        toggleIconLeft.classList.add('fa-arrow-left');
+                        toggleIconLeft.setAttribute('aria-label', 'Abrir Sidebar Pacientes Recientes');
+                    } else {
+                        toggleIconLeft.classList.remove('fa-arrow-left');
+                        toggleIconLeft.classList.add('fa-arrow-right');
+                        toggleIconLeft.setAttribute('aria-label', 'Cerrar Sidebar Pacientes Recientes');
+                    }
+                });
+            }
+
+            // Implementación del toggle del sidebar derecho (Información del Paciente)
+            if (toggleButtonRight && toggleIconRight) {
+                toggleButtonRight.addEventListener('click', function () {
+                    const sidebar = document.getElementById('patient-info-sidebar');
+                    sidebar.classList.toggle('collapsed');
+                    // Cambiar el ícono de la flecha
+                    if (sidebar.classList.contains('collapsed')) {
+                        toggleIconRight.classList.remove('fa-arrow-left');
+                        toggleIconRight.classList.add('fa-arrow-right');
+                        toggleIconRight.setAttribute('aria-label', 'Abrir Sidebar Información del Paciente');
+                    } else {
+                        toggleIconRight.classList.remove('fa-arrow-right');
+                        toggleIconRight.classList.add('fa-arrow-left');
+                        toggleIconRight.setAttribute('aria-label', 'Cerrar Sidebar Información del Paciente');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,77 @@
+<!-- patient_pdf.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe del Paciente</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+        }
+        h1, h2, h3 {
+            text-align: center;
+        }
+        .section-title {
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #333;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        .patient-info {
+            margin-bottom: 20px;
+        }
+        .patient-info div {
+            margin-bottom: 5px;
+        }
+        .patient-info strong {
+            display: inline-block;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Informe del Paciente</h1>
+    <h2>{{ patient.first_name }} {{ patient.last_name }}</h2>
+
+    <div class="patient-info">
+        <div><strong>Nombre:</strong> {{ patient.first_name }} {{ patient.last_name }}</div>
+        <div><strong>Género:</strong> {{ patient.genre }}</div>
+        <div><strong>Fecha de Nacimiento:</strong> {{ patient.birth_date|date:"d/m/Y" }}</div>
+        <div><strong>Edad:</strong> ${data.age}</div>
+        <div><strong>Dirección:</strong> {{ patient.address|default:'No especificada' }}</div>
+        <div><strong>Teléfono:</strong> {{ patient.phone_number|default:'No especificado' }}</div>
+        <div><strong>Email:</strong> {{ patient.email|default:'No especificado' }}</div>
+
+
+        <div><strong>Correo Electrónico:</strong> ${data.email}</div>
+        <div><strong>Teléfono:</strong> ${data.phone}</div>
+        <div><strong>Región:</strong> ${data.region}</div>
+        <div><strong>Ciudad:</strong> ${data.ciudad}</div>
+        <div><strong>Comuna:</strong> ${data.comuna}</div>
+        <div><strong>Centro de salud al que pertenece:</strong> ${data.centro_de_salud}</div>
+    </div>
+
+    <div class="section-title">Historial Médico</div>
+    <div>{{ patient.personal_history|default:'No hay historial personal' }}</div>
+
+    <div class="section-title">Historial Familiar</div>
+    <div>{{ patient.family_history|default:'No hay historial familiar' }}</div>
+
+    <div class="section-title">Historial Clínico</div>
+    <div>{{ patient.clinical_history|default:'No hay historial clínico' }}</div>
+
+    <div class="section-title">Síntomas</div>
+    <div><strong>Síntomas Físicos:</strong> {{ patient.physical_symptoms|default:'No hay síntomas físicos' }}</div>
+    <div><strong>Funcionamiento Social:</strong> {{ patient.social_symptoms|default:'No hay síntomas sociales' }}</div>
+    <div><strong>Síntomas Emocionales:</strong> {{ patient.emotional_symptoms|default:'No hay síntomas emocionales' }}</div>
+    <div><strong>Síntomas de Comportamiento:</strong> {{ patient.behavioral_symptoms|default:'No hay síntomas de comportamiento' }}</div>
+
+    <div class="section-title">Hipótesis Diagnóstica</div>
+    <div>{{ patient.diagnosis_set.last.diagnosis|default:'Sin diagnóstico' }}</div>
+    <div><strong>Detalles del Diagnóstico:</strong> {{ patient.diagnosis_set.last.details|default:'No hay detalles' }}</div>
+    <div><strong>Diagnóstico Adicional:</strong> {{ patient.diagnosis_set.last.additional_diagnosis|default:'No hay diagnósticos adicionales' }}</div>
+</body>
+</html>

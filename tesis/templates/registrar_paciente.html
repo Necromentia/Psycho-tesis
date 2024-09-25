@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Pacientes</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* Cambiado de height a min-height */
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 80%;
+            max-width: 900px;
+        }
+
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            width: 48%;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #1f2937;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea,
+        input[type="date"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        .form-group-large {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: 48%;
+        }
+
+        .register-button {
+            background-color: #4e678b;
+        }
+
+        .register-button:hover {
+            background-color: #181f2b;
+        }
+
+        .ai-button {
+            background-color: #4e678b;
+        }
+
+        .ai-button:hover {
+            background-color: #181f2b;
+        }
+
+        .back-button {
+            background-color: #4e678b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 16px;
+            display: inline-block;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #181f2b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="{% url 'home' %}" class="back-button">Volver</a>
+        <h1>Registro de Pacientes</h1>
+
+        <!-- Mostrar mensaje de error si existe -->
+        {% if error_message %}
+            <p class="error-message">{{ error_message }}</p>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_first_name">Nombre:</label>
+                    {{ patient_form.first_name }}
+                </div>
+                <div class="form-group">
+                    <label for="id_last_name">Apellido:</label>
+                    {{ patient_form.last_name }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_birth_date">Fecha de Nacimiento:</label>
+                    {{ patient_form.birth_date }}
+                </div>
+                <div class="form-group">
+                    <label for="id_genre">Género:</label>
+                    {{ patient_form.genre }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_physical_symptoms">Síntomas Físicos:</label>
+                    {{ symptom_form.physical_symptoms }}
+                </div>
+                <div class="form-group">
+                    <label for="id_social_symptoms">Funcionamiento social:</label>
+                    {{ symptom_form.social_symptoms }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_emotional_symptoms">Síntomas Emocionales:</label>
+                    {{ symptom_form.emotional_symptoms }}
+                </div>
+                <div class="form-group">
+                    <label for="id_behavioral_symptoms">Comportamiento:</label>
+                    {{ symptom_form.behavioral_symptoms }}
+                </div>
+            </div>
+
+            <div class="form-group-large">
+                <label for="id_clinical_history">Historial Médico:</label>
+                {{ medical_history_form.clinical_history }}
+            </div>
+
+            <div class="form-group-large">
+                <label for="id_family_history">Historial Familiar:</label>
+                {{ medical_history_form.family_history }}
+            </div>
+
+            <div class="form-group-large">
+                <label for="id_personal_history">Historial Personal:</label>
+                {{ medical_history_form.personal_history }}
+            </div>
+
+            <div class="form-group-large">
+                <label for="id_diagnosis">Diagnóstico previo:</label>
+                {{ diagnosis_form.diagnosis }}
+            </div>
+            <input type="hidden" id="action-input" name="action" value="register">
+    
+            <div class="button-group">
+                <button type="submit" onclick="setAction('interact')" class="ai-button">Interactuar con IA</button>
+                <button type="submit" onclick="setAction('register')" class="register-button">Registrar paciente</button>
+            </div>
+        </form>
+    </div>
+</body>
+
+<script>
+    function setAction(action) {
+        // Cambia el valor del campo oculto que lleva la acción
+        document.getElementById('action-input').value = action;
+    }
+</script>
+
+</html>
