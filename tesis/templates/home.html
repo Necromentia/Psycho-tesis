@@ -323,7 +323,7 @@
             width: 50%;
             /* Aumenta el tamaño del modal para que se vea mejor */
             border-radius: 10px;
-            
+
         }
 
         .viewPatient {
@@ -334,7 +334,7 @@
             width: 40%;
             /* Aumenta el tamaño del modal para que se vea mejor */
             border-radius: 10px;
-            
+
         }
 
         .close {
@@ -415,16 +415,19 @@
         }
 
         .action-buttons {
+            margin-top: 10px;
             display: flex;
-            gap: 5px;
+            justify-content: center;
+            gap: 3px;
         }
 
         .action-buttons button {
-            padding: 5px 10px;
+            padding: 4px 6px;
             border: none;
             border-radius: 3px;
             cursor: pointer;
             color: white;
+            font-size: 12px;
         }
 
         .action-buttons .view-button {
@@ -527,6 +530,57 @@
         .trash-folder button:hover {
             background-color: #c0392b;
         }
+
+        .patients-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .patient-card {
+            width: 150px;
+            height: 220px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            padding: 10px;
+            cursor: grab;
+            position: relative;
+        }
+
+        .patient-card:hover {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .patient-photo img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .patient-name {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .folder.drag-over {
+            background-color: #e0e0e0;
+        }
+
+        .patient-card.dragging {
+            opacity: 0.5;
+        }
+
+        .patient-diagnosis {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+            font-style: italic;
+        }
     </style>
 </head>
 
@@ -588,45 +642,39 @@
             {% endif %}
         </div>
 
-
         <div class="unassigned-patients-container">
             <h3>Pacientes sin carpeta:</h3>
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre Completo</th>
-                        <th>Género</th>
-                        <th>Fecha de Nacimiento</th>
-                        <th>Hipotesis diagnóstica</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for patient in unassigned_patients %}
-                    <tr class="patient patient-row" draggable="true" data-patient-id="{{ patient.id }}">
-                        <td>{{ patient.id }}</td>
-                        <td>{{ patient.first_name }} {{ patient.last_name }}</td>
-                        <td>{{ patient.genre }}</td>
-                        <td>{{ patient.birth_date }}</td>
-                        <td> {% if patient.diagnosis_set.exists %}
-                            {{ patient.diagnosis_set.last.diagnosis }}
-                            {% else %}
-                            Sin diagnóstico
-                            {% endif %}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="view-button">Ver</button>
-                                <button class="edit-button">Editar</button>
-                                <button class="delete-button">Eliminar</button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
+            <div class="patients-grid">
+                {% for patient in unassigned_patients %}
+                <div class="patient-card" draggable="true" data-patient-id="{{ patient.id }}">
+                    <div class="patient-photo">
+                        {% if patient.genre == 'Masculino' %}
+                        <img src="{% static 'images/male-patient.png' %}" alt="Paciente Masculino">
+                        {% elif patient.genre == 'Femenino' %}
+                        <img src="{% static 'images/female-patient.png' %}" alt="Paciente Femenino">
+                        {% else %}
+                        <img src="{% static 'images/default-patient.png' %}" alt="Paciente">
+                        {% endif %}
+                    </div>
+                    <div class="action-buttons">
+                        <button class="view-button">Ver</button>
+                        <button class="edit-button">Editar</button>
+                        <button class="delete-button">Eliminar</button>
+                    </div>
+                    <div class="patient-name">{{ patient.first_name }} {{ patient.last_name }}</div>
+                    <div class="patient-diagnosis">
+                        {% if patient.diagnosis_set.exists %}
+                        {{ patient.diagnosis_set.last.diagnosis }}
+                        {% else %}
+                        Sin diagnóstico
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
+
+
     </div>
 
     <div id="actionModal" class="modal">
@@ -729,7 +777,7 @@
             <span class="close">&times;</span>
             <button id="downloadPdfButton" class="pdf-button">Descargar PDF</button>
             <h2>Datos del Paciente</h2>
-            
+
 
             <div class="patient-details-container" id="patient-details">
                 <div class="section-title">Información Personal</div>
@@ -739,7 +787,7 @@
                 <div><strong>Fecha de Nacimiento:</strong> ${data.birth_date}</div>
                 <div><strong>Edad:</strong> ${data.age}</div>
                 <div><strong>Correo Electrónico:</strong> ${data.email}</div>
-                
+
                 <div><strong>Teléfono:</strong> ${data.phone}</div>
                 <div><strong>Región:</strong> ${data.region}</div>
                 <div><strong>Ciudad:</strong> ${data.ciudad}</div>
@@ -962,6 +1010,116 @@
                         });
                 }
             }
+            let draggedPatient = null;
+
+            // Añadir eventos de arrastre a las tarjetas de pacientes
+            document.querySelectorAll('.patient-card').forEach(function (patientCard) {
+                patientCard.addEventListener('dragstart', function (event) {
+                    draggedPatient = this;
+                    event.dataTransfer.setData('text/plain', this.getAttribute('data-patient-id'));
+                    setTimeout(() => {
+                        this.classList.add('dragging');
+                    }, 0);
+                });
+
+                patientCard.addEventListener('dragend', function (event) {
+                    this.classList.remove('dragging');
+                    draggedPatient = null;
+                });
+
+                // Manejar clics en los botones de acción
+                patientCard.addEventListener('click', function (event) {
+                    const target = event.target;
+                    const patientId = this.getAttribute('data-patient-id');
+
+                    if (target.classList.contains('view-button')) {
+                        event.stopPropagation();
+                        viewPatient(patientId);
+                    } else if (target.classList.contains('edit-button')) {
+                        event.stopPropagation();
+                        editPatient(patientId);
+                    } else if (target.classList.contains('delete-button')) {
+                        event.stopPropagation();
+                        deletePatient(patientId);
+                    } else {
+                        // Redirigir al chat al hacer clic en la tarjeta
+                        window.location.href = `/chat?patient_id=${patientId}`;
+                    }
+                });
+            });
+
+            // Actualizar eventos de las carpetas para arrastrar y soltar
+            document.querySelectorAll('.folder').forEach(function (folder) {
+                folder.addEventListener('dragover', function (event) {
+                    event.preventDefault();
+                    this.classList.add('drag-over');
+                });
+
+                folder.addEventListener('dragleave', function (event) {
+                    this.classList.remove('drag-over');
+                });
+
+                folder.addEventListener('drop', function (event) {
+                    event.preventDefault();
+                    this.classList.remove('drag-over');
+                    const patientId = event.dataTransfer.getData('text/plain');
+                    const folderId = this.getAttribute('data-folder-id');
+                    const folderName = this.querySelector('.folder-name').textContent;
+
+                    if (folderName === 'Papelera') {
+                        alert('No puedes mover pacientes a la Papelera manualmente.');
+                        return;
+                    }
+
+                    assignPatientToFolder(patientId, folderId);
+                });
+            });
+
+            // Función para asignar el paciente a una carpeta
+            function assignPatientToFolder(patientId, folderId) {
+                fetch(`/assign_patient_to_folder/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        'patient_id': patientId,
+                        'folder_id': folderId
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Paciente asignado correctamente');
+                            // Eliminar la tarjeta del paciente de la cuadrícula
+                            if (draggedPatient) {
+                                draggedPatient.remove();
+                            }
+                        } else {
+                            alert('Error al asignar el paciente');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            // Función para obtener el token CSRF
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
             // Función para abrir el modal y cargar los pacientes
             function openFolder(folderId, folderName) {
                 const folderNameElement = document.getElementById('folderName');
@@ -1153,7 +1311,7 @@
                         }
                     })
                     .catch(error => console.error('Error:', error));
-                }
+            }
 
             // Función para abrir el modal de editar paciente
             function editPatient(patientId) {
