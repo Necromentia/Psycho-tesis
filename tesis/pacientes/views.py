@@ -231,18 +231,6 @@ def create_or_edit_folder(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
-@login_required
-def delete_folder(request):
-    if request.method == 'POST':
-        folder_id = request.POST.get('folder_id')
-        folder = get_object_or_404(Folder, id=folder_id, user=request.user)
-        folder.delete()
-
-        return JsonResponse({'success': True})
-
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
-
-
 @csrf_exempt 
 def get_response(request):
     if request.method == 'POST':
