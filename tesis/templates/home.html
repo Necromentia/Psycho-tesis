@@ -228,47 +228,50 @@
         }
 
         .folders {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            flex: 1;
-            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
         .folder {
-            background-color: #4e678b;
-            padding: 20px;
-            border-radius: 10px;
+            width: 120px;
             text-align: center;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            color: white;
-            font-size: 18px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
         }
 
         .folder:hover {
-            background-color: #181f2b;
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+
         }
 
-        .folder img {
-            width: 50px;
+        .folder-icon {
+            width: 100%;
+            height: 80px;
             margin-bottom: 10px;
         }
 
-        .folder span {
-            font-size: 24px;
-            font-weight: bold;
+        .folder-icon img {
+            width: 60px;
+            height: 60px;
         }
 
-        .folder .folder-count {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            font-size: 14px;
+        .folder-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            word-wrap: break-word;
+        }
+
+        .folder:hover .folder-icon img {
+            transform: scale(1.1);
+        }
+
+        .folder:hover .folder-name {
+            color: #007bff;
         }
 
         .recent-patients-list {
@@ -581,6 +584,63 @@
             text-align: center;
             font-style: italic;
         }
+
+        .folder-count {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        .folder.trash-folder .folder-icon img {
+            content: url("{% static 'images/trash-icon.png' %}");
+        }
+
+        .folder.trash-folder .folder-name {
+            color: #e74c3c;
+        }
+
+        .folder.trash-folder:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        @media (max-width: 1200px) {
+            .folders {
+                gap: 15px;
+            }
+
+            .folder {
+                width: 100px;
+            }
+
+            .folder-icon img {
+                width: 50px;
+                height: 50px;
+            }
+
+            .folder-name {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .folders {
+                justify-content: center;
+            }
+
+            .folder {
+                width: 80px;
+            }
+
+            .folder-icon img {
+                width: 40px;
+                height: 40px;
+            }
+
+            .folder-name {
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 
@@ -593,9 +653,7 @@
             </div>
         </div>
         <div>
-            <div class="trash-folder" id="trash-folder">
-                <button id="openTrashFolder">Papelera</button>
-            </div>
+
             <div class="user-info-container">
                 <div class="user-info">Gustavo Arnaldi Lopez</div>
                 <div class="dropdown-content">
@@ -631,14 +689,40 @@
 
             {% if folders %}
             <div class="folders">
-                {% for folder in folders %}
-                {% if not folder.is_fixed %}
-                <div class="folder" data-folder-id="{{ folder.id }}">
-                    <span>{{ folder.name }}</span>
+                <div class="folder" data-folder-id="{{ trash_folder.id }}">
+                    <div class="folder-icon">
+                        <img src="{% static 'images/trash-icon.png' %}" alt="Papelera">
+                    </div>
+                    <div class="folder-name">{{ trash_folder.name }}</div>
+                    <div class="folder-count">
+                        {% if folder.patients.count.exists %}
+                        {{ folder.patients.count }}
+                        {% else %}
+                        0
+                        {% endif %}
+                        pacientes
+                    </div>
                 </div>
-                {% endif %}
+                {% for folder in folders %}
+                <div class="folder" data-folder-id="{{ folder.id }}">
+                    <div class="folder-icon">
+                        <img src="{% static 'images/folder1.png' %}" alt="Carpeta">
+                    </div>
+                    <div class="folder-name">{{ folder.name }}</div>
+                    <div class="folder-count">
+                        {% if folder.patients.count.exists %}
+                        {{ folder.patients.count }}
+                        {% else %}
+                        0
+                        {% endif %}
+                        pacientes
+                    </div>
+                </div>
+
+                
                 {% endfor %}
             </div>
+
             {% endif %}
         </div>
 
@@ -1050,6 +1134,7 @@
 
             // Actualizar eventos de las carpetas para arrastrar y soltar
             document.querySelectorAll('.folder').forEach(function (folder) {
+                folder.setAttribute('draggable', 'false');
                 folder.addEventListener('dragover', function (event) {
                     event.preventDefault();
                     this.classList.add('drag-over');
