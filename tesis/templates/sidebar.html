@@ -1,0 +1,66 @@
+<!-- templates/sidebar.html -->
+<style>
+    /* Estilos para el sidebar */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 250px;
+        height: 100%;
+        background-color: #1f2937;
+        color: white;
+        overflow-x: hidden;
+        transition: transform 0.3s ease;
+        transform: translateX(-100%);
+        z-index: 1000;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .toggle-button {
+        position: fixed;
+        left: 10px;
+        top: 10px;
+        font-size: 24px;
+        cursor: pointer;
+        color: #1f2937;
+        background-color: #ffffff;
+        border: none;
+        border-radius: 5px;
+        padding: 5px 10px;
+        z-index: 1001;
+    }
+
+    .sidebar-content {
+        padding: 60px 20px 20px 20px;
+    }
+
+    .patient-item {
+        margin-bottom: 15px;
+    }
+
+    .patient-item a {
+        color: white;
+        text-decoration: none;
+        font-size: 18px;
+    }
+
+    .patient-item a:hover {
+        text-decoration: underline;
+    }
+</style>
+<div class="sidebar" id="sidebar">
+    <div class="toggle-button" id="toggle-button">
+        ☰
+    </div>
+    <div class="sidebar-content">
+        <h2>Pacientes Recientes</h2>
+        {% for patient in recent_patients %}
+        <div class="patient-item">
+            <a href="{% url 'chat' patient.id %}">{{ patient.first_name }} {{ patient.last_name }}</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
