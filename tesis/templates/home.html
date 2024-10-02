@@ -1348,8 +1348,8 @@
                     .then(response => response.json())
                     .then(data => {
                         const patientDetails = document.getElementById('patient-details');
-                        patientDetails.innerHTML = 
-                        `
+                        patientDetails.innerHTML =
+                            `
                         <div class="section-title">Información Personal</div>
                         <div><strong>Nombre:</strong> ${data.first_name} ${data.last_name}</div>
                         <div><strong>Género:</strong> ${data.genre}</div>
@@ -1692,10 +1692,13 @@
             });
             function openCreateFolderModal() {
                 const folderName = prompt('Ingresa el nombre de la nueva carpeta:');
-                if (folderName) {
-                    createFolder(folderName);
+                if (folderName && folderName.trim() !== '') {
+                    createFolder(folderName.trim());
+                } else {
+                    alert('Debe ingresar un nombre para la carpeta.');
                 }
             }
+
             function createFolder(folderName) {
                 fetch('/create_folder/', {
                     method: 'POST',
@@ -1708,8 +1711,8 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Actualizar la lista de carpetas
-                            addFolderToUI(data.folder);
+                            // Recargar la página para mostrar la nueva carpeta
+                            location.reload();
                         } else {
                             alert('Error al crear la carpeta: ' + data.error);
                         }
@@ -1718,37 +1721,6 @@
                         console.error('Error:', error);
                     });
             }
-
-            function addFolderToUI(folder) {
-                const foldersContainer = document.querySelector('.folders-container');
-
-                // Crear el elemento de la carpeta
-                const folderElement = document.createElement('div');
-                folderElement.classList.add('folder');
-                folderElement.setAttribute('data-folder-id', folder.id);
-
-                // Añadir el nombre de la carpeta
-                const folderNameElement = document.createElement('div');
-                folderNameElement.classList.add('folder-name');
-                folderNameElement.textContent = folder.name;
-                folderElement.appendChild(folderNameElement);
-
-                // Añadir eventos al folder
-                folderElement.addEventListener('click', function () {
-                    loadFolderPatients(folder.id, folder.name);
-                });
-
-                folderElement.addEventListener('contextmenu', function (event) {
-                    event.preventDefault();
-                    openFolderContextMenu(event, folder.id);
-                });
-
-                // Añadir la carpeta antes del botón de agregar carpeta
-                const addFolderButton = document.querySelector('.add-folder-button');
-                foldersContainer.insertBefore(folderElement, addFolderButton);
-            }
-
-
             const patientContainer = document.querySelector('.unassigned-patients-container');
             if (patientContainer) {
                 patientContainer.addEventListener('dragstart', function (event) {

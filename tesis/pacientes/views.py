@@ -211,8 +211,8 @@ def delete_patient(request, patient_id):
 @login_required
 def create_folder(request):
     if request.method == 'POST':
-        folder_name = request.POST.get('folder_name')
-        patient_id = request.POST.get('patient_id')
+        data = json.loads(request.body)
+        folder_name = data.get('folder_name')
 
         if not folder_name:
             return JsonResponse({'success': False, 'error': 'El nombre de la carpeta es obligatorio.'})
@@ -223,7 +223,7 @@ def create_folder(request):
 
         # Crear nueva carpeta
         folder = Folder.objects.create(name=folder_name, user=request.user)
-        
+
         return JsonResponse({'success': True, 'folder': {'id': folder.id, 'name': folder.name}})
 
     return JsonResponse({'success': False, 'error': 'Solicitud inválida'})
