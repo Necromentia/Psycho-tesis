@@ -209,27 +209,24 @@ def delete_patient(request, patient_id):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 @login_required
-def create_or_edit_folder(request):
+def create_folder(request):
     if request.method == 'POST':
-        folder_id = request.POST.get('folder_id')
         folder_name = request.POST.get('folder_name')
         patient_id = request.POST.get('patient_id')
 
-        if folder_id:  # Editar carpeta existente
-            folder = get_object_or_404(Folder, id=folder_id, user=request.user)
-            folder.name = folder_name
-            folder.save()
-        else:  # Crear nueva carpeta
-            folder = Folder.objects.create(name=folder_name, user=request.user)
+        if not folder_name:
+            return JsonResponse({'success': False, 'error': 'El nombre de la carpeta es obligatorio.'})
 
-        if patient_id:
-            patient = get_object_or_404(Patient, id=patient_id)
-            patient.folder = folder
-            patient.save()
+        # Verificar si ya existe una carpeta con ese nombre para el usuario
+        if Folder.objects.filter(name=folder_name, user=request.user).exists():
+            return JsonResponse({'success': False, 'error': 'Ya tienes una carpeta con ese nombre.'})
 
-        return JsonResponse({'success': True})
+        # Crear nueva carpeta
+        folder = Folder.objects.create(name=folder_name, user=request.user)
+        
+        return JsonResponse({'success': True, 'folder': {'id': folder.id, 'name': folder.name}})
 
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
+    return JsonResponse({'success': False, 'error': 'Solicitud inválida'})
 
 @csrf_exempt 
 def get_response(request):

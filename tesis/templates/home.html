@@ -619,6 +619,19 @@
             /* Efecto al pasar el cursor */
         }
 
+        .add-folder-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            /* Aplica otros estilos que coincidan con tus carpetas */
+        }
+
+        .add-folder-button img {
+            width: 100px;
+            height: 100px;
+        }
+
 
         @media (max-width: 1200px) {
             .folders {
@@ -698,28 +711,13 @@
         </div>
 
         <div class="folders-container">
-            <div class="edit-bar">
-                <div class="icon-button" id="edit-icon">
-                    ✏️
-                </div>
-            </div>
-
             {% if folders %}
             <div class="folders">
-
                 <div class="folder" data-folder-id="{{ trash_folder.id }}">
                     <div class="folder-icon">
                         <img src="{% static 'images/trash-icon.png' %}" alt="Papelera">
                     </div>
                     <div class="folder-name">{{ trash_folder.name }}</div>
-                    <div class="folder-count">
-                        {% if folder.patients.count.exists %}
-                        {{ folder.patients.count }}
-                        {% else %}
-                        0
-                        {% endif %}
-                        pacientes
-                    </div>
                 </div>
                 {% for folder in folders %}
                 <div class="folder" data-folder-id="{{ folder.id }}">
@@ -727,23 +725,14 @@
                         <img src="{% static 'images/folder1.png' %}" alt="Carpeta">
                     </div>
                     <div class="folder-name">{{ folder.name }}</div>
-                    <div class="folder-count">
-                        {% if folder.patients.count.exists %}
-                        {{ folder.patients.count }}
-                        {% else %}
-                        0
-                        {% endif %}
-                        pacientes
-                    </div>
                 </div>
-
-
                 {% endfor %}
+                <div class="folder add-folder-button">
+                    <img src="{% static 'images/new-folder.png' %}" alt="Agregar Carpeta">
+                </div>
             </div>
-
             {% endif %}
         </div>
-
         <div class="unassigned-patients-container">
             <h3>Pacientes sin carpeta:</h3>
             <div class="patients-grid">
@@ -784,10 +773,8 @@
             <span class="close">&times;</span>
             <h2>Gestión de Carpetas</h2>
             <button id="openCreateFolderModal" class="modal-button">Crear Carpeta</button>
-            <button id="openEditFolderModal" class="modal-button">Editar Carpeta</button>
         </div>
     </div>
-
     <div id="createFolderModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -796,14 +783,6 @@
                 {% csrf_token %}
                 <label for="folder_name">Nombre de la nueva carpeta:</label>
                 <input type="text" id="folder_name" name="folder_name" required>
-                <label for="patient_id">Vincular paciente:</label>
-                <select id="patient_id" name="patient_id">
-                    <option value="">--Seleccionar paciente--</option>
-                    {% for patient in unassigned_patients %}
-                    <option value="{{ patient.id }}">{{ patient.first_name }} {{ patient.last_name }}</option>
-                    {% endfor %}
-                </select>
-
                 <button type="submit" name="create_folder">Crear carpeta</button>
             </form>
         </div>
@@ -965,23 +944,6 @@
             const openEditFolderModalButton = document.getElementById('openEditFolderModal');
             const openEditActionsModalButton = document.getElementById('openEditActionsModal');
             const editFolderIdHidden = document.getElementById('edit_folder_id_hidden');
-
-            // Mostrar el modal de acciones al hacer clic en el botón de editar
-            editButton.addEventListener('click', function () {
-                actionModal.style.display = 'block';
-            });
-
-            // Mostrar el modal de crear carpeta
-            openCreateFolderModalButton.addEventListener('click', function () {
-                actionModal.style.display = 'none';
-                createFolderModal.style.display = 'block';
-            });
-
-            // Mostrar el modal de seleccionar carpeta para editar
-            openEditFolderModalButton.addEventListener('click', function () {
-                actionModal.style.display = 'none';
-                editFolderModal.style.display = 'block';
-            });
 
             // Mostrar el modal de acciones de edición al seleccionar una carpeta
             openEditActionsModalButton.addEventListener('click', function () {
@@ -1328,7 +1290,7 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
+                            'X-CSRFToken': getCookie('csrftoken')
                         },
                         body: JSON.stringify({
                             'patient_id': patientId
@@ -1337,14 +1299,13 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                alert('Paciente restaurado correctamente');
-                                // Eliminar la fila del paciente del modal
-                                const patientRow = document.querySelector(`tr[data-patient-id="${patientId}"]`);
-                                if (patientRow) {
-                                    patientRow.remove();
+                                // Eliminar el paciente de la interfaz
+                                const patientCard = document.querySelector(`.patient-card[data-patient-id="${patientId}"]`);
+                                if (patientCard) {
+                                    patientCard.remove();
                                 }
-                                // Agregar el paciente restaurado a la lista de pacientes sin carpeta
-                                addPatientToUnassignedList(data.patient);
+                                // Mostrar un mensaje de éxito
+                                alert('Paciente restaurado correctamente');
                             } else {
                                 alert('Error al restaurar el paciente');
                             }
@@ -1354,6 +1315,7 @@
                         });
                 }
             }
+
             function addPatientToUnassignedList(patient) {
                 const unassignedPatientsContainer = document.querySelector('.unassigned-patients-container tbody');
                 const row = document.createElement('tr');
@@ -1386,7 +1348,8 @@
                     .then(response => response.json())
                     .then(data => {
                         const patientDetails = document.getElementById('patient-details');
-                        patientDetails.innerHTML = `
+                        patientDetails.innerHTML = 
+                        `
                         <div class="section-title">Información Personal</div>
                         <div><strong>Nombre:</strong> ${data.first_name} ${data.last_name}</div>
                         <div><strong>Género:</strong> ${data.genre}</div>
@@ -1414,7 +1377,7 @@
                         <div><strong>Hipotesis diagnóstica:</strong> ${data.diagnosis || 'Sin diagnóstico'}</div>
                         <div><strong>Diagnóstico detalles:</strong> ${data.diagnosis_details || 'No hay detalles'}</div>
                         <div><strong>Diagnóstico adicional:</strong> ${data.aditional_diagnosis || 'No hay diagnósticos adicionales'}</div>
-                    `;
+                        `;
                         viewPatientModal.style.display = 'block';
                         const downloadPdfButton = document.getElementById('downloadPdfButton');
                         if (downloadPdfButton) {
@@ -1534,14 +1497,18 @@
             document.querySelectorAll('.folder').forEach(folder => {
                 folder.addEventListener('click', function () {
                     const folderId = folder.getAttribute('data-folder-id');
-                    const folderName = folder.querySelector('.folder-name').textContent;
+                    const folderNameElement = folder.querySelector('.folder-name');
+                    if (folderNameElement) {
+                        const folderName = folderNameElement.textContent;
+                        // Marcar la carpeta como activa
+                        document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
+                        folder.classList.add('active');
 
-                    // Marcar la carpeta como activa
-                    document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
-                    folder.classList.add('active');
-
-                    // Cargar los pacientes de la carpeta y actualizar la vista
-                    loadFolderPatients(folderId, folderName);
+                        // Cargar los pacientes de la carpeta y actualizar la vista
+                        loadFolderPatients(folderId, folderName);
+                    } else {
+                        console.error('No se encontró el elemento .folder-name dentro de la carpeta.');
+                    }
                 });
             });
             function loadFolderPatients(folderId, folderName) {
@@ -1613,7 +1580,10 @@
                         if (!event.target.classList.contains('view-button') &&
                             !event.target.classList.contains('edit-button') &&
                             !event.target.classList.contains('delete-button')) {
-                            window.location.href = `/chat?patient_id=${patient.id}`;
+                            if (folderName != 'Papelera') {
+                                window.location.href = `/chat?patient_id=${patient.id}`;
+                            }
+
                         }
                     });
 
@@ -1674,6 +1644,7 @@
                     }
                     actionButtons.appendChild(deleteButton);
 
+
                     patientCard.appendChild(actionButtons);
 
                     // Nombre del paciente
@@ -1715,6 +1686,69 @@
                     })
                     .catch(error => console.error('Error:', error));
             }
+            const addFolderButton = document.querySelector('.add-folder-button');
+            addFolderButton.addEventListener('click', function () {
+                openCreateFolderModal();
+            });
+            function openCreateFolderModal() {
+                const folderName = prompt('Ingresa el nombre de la nueva carpeta:');
+                if (folderName) {
+                    createFolder(folderName);
+                }
+            }
+            function createFolder(folderName) {
+                fetch('/create_folder/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ 'folder_name': folderName })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Actualizar la lista de carpetas
+                            addFolderToUI(data.folder);
+                        } else {
+                            alert('Error al crear la carpeta: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            function addFolderToUI(folder) {
+                const foldersContainer = document.querySelector('.folders-container');
+
+                // Crear el elemento de la carpeta
+                const folderElement = document.createElement('div');
+                folderElement.classList.add('folder');
+                folderElement.setAttribute('data-folder-id', folder.id);
+
+                // Añadir el nombre de la carpeta
+                const folderNameElement = document.createElement('div');
+                folderNameElement.classList.add('folder-name');
+                folderNameElement.textContent = folder.name;
+                folderElement.appendChild(folderNameElement);
+
+                // Añadir eventos al folder
+                folderElement.addEventListener('click', function () {
+                    loadFolderPatients(folder.id, folder.name);
+                });
+
+                folderElement.addEventListener('contextmenu', function (event) {
+                    event.preventDefault();
+                    openFolderContextMenu(event, folder.id);
+                });
+
+                // Añadir la carpeta antes del botón de agregar carpeta
+                const addFolderButton = document.querySelector('.add-folder-button');
+                foldersContainer.insertBefore(folderElement, addFolderButton);
+            }
+
+
             const patientContainer = document.querySelector('.unassigned-patients-container');
             if (patientContainer) {
                 patientContainer.addEventListener('dragstart', function (event) {
@@ -1753,44 +1787,49 @@
 
             function drop(event) {
                 event.preventDefault();
-                event.stopPropagation(); // Añadido para evitar propagación
-                console.log('drop event triggered'); // Log para depuración
+                event.stopPropagation();
                 var patientId = event.dataTransfer.getData("text");
                 var folderElement = event.target.closest('.folder');
                 if (folderElement) {
                     var folderId = folderElement.getAttribute('data-folder-id');
-                    var folderName = folderElement.querySelector('span').textContent;
-                    if (folderName === 'Papelera') {
-                        alert('No puedes mover pacientes a la Papelera manualmente.');
-                        return;
-                    }
+                    var folderNameElement = folderElement.querySelector('.folder-name');
+                    if (folderNameElement) {
+                        var folderName = folderNameElement.textContent;
+                        if (folderName === 'Papelera') {
+                            alert('No puedes mover pacientes a la Papelera manualmente.');
+                            return;
+                        }
 
-                    // Realizar solicitud AJAX para asignar el paciente a la carpeta
-                    fetch(`/assign_patient_to_folder/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: JSON.stringify({
-                            'patient_id': patientId,
-                            'folder_id': folderId
+                        // Realizar solicitud AJAX para asignar el paciente a la carpeta
+                        fetch(`/assign_patient_to_folder/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                'patient_id': patientId,
+                                'folder_id': folderId
+                            })
                         })
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert('Paciente asignado correctamente');
-                                location.reload();  // Recargar la página para reflejar los cambios
-                            } else {
-                                alert('Error al asignar el paciente');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        });
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Paciente asignado correctamente');
+                                    location.reload();
+                                } else {
+                                    alert('Error al asignar el paciente');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                            });
+                    } else {
+                        console.error('No se encontró el elemento .folder-name dentro de la carpeta.');
+                    }
                 }
             }
+
             // Añadir eventos a los pacientes
             document.querySelectorAll('.patient').forEach(function (patient) {
                 patient.addEventListener('dragstart', drag);
