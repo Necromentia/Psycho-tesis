@@ -9,6 +9,7 @@ urlpatterns = [
     #path('login/', views.inicio, name='login'),
     path('home/', views.home, name='home'), 
     path('create_folder/', views.create_folder, name='create_folder'),
+    path('rename_folder/', views.rename_folder, name='rename_folder'),
     path('delete_folder/', views.delete_folder, name='delete_folder'),
     path('get_patients_by_folder/<int:folder_id>/', views.get_patients_by_folder, name='get_patients_by_folder'),
     path('get_patient/<int:patient_id>/', views.get_patient, name='get_patient'),

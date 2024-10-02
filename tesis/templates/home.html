@@ -632,6 +632,27 @@
             height: 100px;
         }
 
+        /* Estilos para el menú contextual */
+        .context-menu {
+            display: none;
+            position: absolute;
+            z-index: 1000;
+            width: 150px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 5px 0;
+            list-style: none;
+        }
+
+        .context-menu li {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .context-menu li:hover {
+            background-color: #f1f1f1;
+        }
+
 
         @media (max-width: 1200px) {
             .folders {
@@ -787,24 +808,11 @@
             </form>
         </div>
     </div>
+    <ul id="folderContextMenu" class="context-menu">
+        <li id="renameFolderOption">Renombrar</li>
+        <li id="deleteFolderOption">Eliminar</li>
+    </ul>
 
-    <div id="editFolderModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Seleccionar carpeta para editar</h2>
-            <form id="select-folder-form" method="POST">
-                {% csrf_token %}
-                <label for="edit_folder_id">Seleccionar carpeta:</label>
-                <select id="edit_folder_id" name="folder_id" required>
-                    <option value="">--Seleccionar carpeta--</option>
-                    {% for folder in folders %}
-                    <option value="{{ folder.id }}">{{ folder.name }}</option>
-                    {% endfor %}
-                </select>
-                <button type="button" id="openEditActionsModal">Editar carpeta</button>
-            </form>
-        </div>
-    </div>
 
     <div id="editActionsModal" class="modal">
         <div class="modal-content">
@@ -853,6 +861,7 @@
             </table>
         </div>
     </div>
+
     <div id="viewPatientModal" class="modal">
         <div class="viewPatient">
             <span class="close">&times;</span>
@@ -926,6 +935,7 @@
             </form>
         </div>
     </div>
+ 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
@@ -933,7 +943,6 @@
             const editButton = document.getElementById('edit-icon');
             const actionModal = document.getElementById('actionModal');
             const createFolderModal = document.getElementById('createFolderModal');
-            const editFolderModal = document.getElementById('editFolderModal');
             const editActionsModal = document.getElementById('editActionsModal');
             const viewPatientsModal = document.getElementById('viewPatientsModal');
             const viewPatientModal = document.getElementById('viewPatientModal'); // Añadir esta línea
@@ -941,21 +950,10 @@
             const closeModalElements = document.getElementsByClassName('close');
 
             const openCreateFolderModalButton = document.getElementById('openCreateFolderModal');
-            const openEditFolderModalButton = document.getElementById('openEditFolderModal');
             const openEditActionsModalButton = document.getElementById('openEditActionsModal');
             const editFolderIdHidden = document.getElementById('edit_folder_id_hidden');
 
-            // Mostrar el modal de acciones de edición al seleccionar una carpeta
-            openEditActionsModalButton.addEventListener('click', function () {
-                const selectedFolderId = document.getElementById('edit_folder_id').value;
-                if (selectedFolderId) {
-                    editFolderIdHidden.value = selectedFolderId; // Set hidden input value
-                    editFolderModal.style.display = 'none';
-                    editActionsModal.style.display = 'block';
-                } else {
-                    alert('Por favor, selecciona una carpeta para editar.');
-                }
-            });
+
             const openTrashFolderButton = document.getElementById('openTrashFolder');
             if (openTrashFolderButton) {
                 openTrashFolderButton.addEventListener('click', function () {
@@ -1461,8 +1459,6 @@
                         actionModal.style.display = 'none';
                     } else if (element.closest('.modal').id === 'createFolderModal') {
                         createFolderModal.style.display = 'none';
-                    } else if (element.closest('.modal').id === 'editFolderModal') {
-                        editFolderModal.style.display = 'none';
                     } else if (element.closest('.modal').id === 'editActionsModal') {
                         editActionsModal.style.display = 'none';
                     } else if (element.closest('.modal').id === 'viewPatientsModal') {
@@ -1483,8 +1479,6 @@
                     actionModal.style.display = 'none';
                 } else if (event.target === createFolderModal) {
                     createFolderModal.style.display = 'none';
-                } else if (event.target === editFolderModal) {
-                    editFolderModal.style.display = 'none';
                 } else if (event.target === editActionsModal) {
                     editActionsModal.style.display = 'none';
                 } else if (event.target === viewPatientsModal) {
@@ -1721,6 +1715,142 @@
                         console.error('Error:', error);
                     });
             }
+            function closeContextMenu() {
+                const contextMenu = document.getElementById('folderContextMenu');
+                contextMenu.style.display = 'none';
+                window.currentFolderElement = null;
+            }
+
+            // Añadir eventos de clic derecho a las carpetas
+            document.querySelectorAll('.folder').forEach(folder => {
+                folder.addEventListener('contextmenu', function (event) {
+                    event.preventDefault();
+
+                    // Validar que no sea la carpeta "Papelera" o el botón de agregar carpeta
+                    const folderNameElement = folder.querySelector('.folder-name');
+                    const folderName = folderNameElement ? folderNameElement.textContent : '';
+                    if (folderName === 'Papelera' || folder.classList.contains('add-folder-button')) {
+                        return;
+                    }
+
+                    // Mostrar el menú contextual
+                    const contextMenu = document.getElementById('folderContextMenu');
+                    contextMenu.style.display = 'block';
+
+                    // Ajustar posición del menú contextual
+                    const menuWidth = contextMenu.offsetWidth;
+                    const menuHeight = contextMenu.offsetHeight;
+                    const windowWidth = window.innerWidth;
+                    const windowHeight = window.innerHeight;
+
+                    let posX = event.pageX;
+                    let posY = event.pageY;
+
+                    // Ajustar posición si el menú se sale de la ventana
+                    if ((posX + menuWidth) > windowWidth) {
+                        posX -= menuWidth;
+                    }
+                    if ((posY + menuHeight) > windowHeight) {
+                        posY -= menuHeight;
+                    }
+
+                    contextMenu.style.left = `${posX}px`;
+                    contextMenu.style.top = `${posY}px`;
+
+                    // Guardar el folder actual en una variable global
+                    window.currentFolderElement = folder;
+                });
+            });
+
+            // Cerrar el menú contextual al hacer clic en cualquier lugar
+            document.addEventListener('click', function (event) {
+                const contextMenu = document.getElementById('folderContextMenu');
+                if (contextMenu.style.display === 'block') {
+                    closeContextMenu();
+                }
+            });
+            // Evento para la opción "Renombrar"
+            document.getElementById('renameFolderOption').addEventListener('click', function () {
+                const folderElement = window.currentFolderElement;
+                if (folderElement) {
+                    const folderId = folderElement.getAttribute('data-folder-id');
+                    const currentNameElement = folderElement.querySelector('.folder-name');
+                    const currentName = currentNameElement ? currentNameElement.textContent : '';
+                    const newName = prompt('Ingresa el nuevo nombre para la carpeta:', currentName);
+                    if (newName && newName.trim() !== '') {
+                        renameFolder(folderId, newName.trim());
+                    }
+                }
+                closeContextMenu();
+            });
+
+            // Evento para la opción "Eliminar"
+            document.getElementById('deleteFolderOption').addEventListener('click', function () {
+                const folderElement = window.currentFolderElement;
+                if (folderElement) {
+                    const folderId = folderElement.getAttribute('data-folder-id');
+                    if (confirm('¿Estás seguro de que deseas eliminar esta carpeta?')) {
+                        deleteFolder(folderId);
+                    }
+                }
+                closeContextMenu();
+            });
+
+            function renameFolder(folderId, newName) {
+                fetch(`/rename_folder/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ 'folder_id': folderId, 'new_name': newName })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Actualizar el nombre en la interfaz
+                            const folderElement = document.querySelector(`.folder[data-folder-id="${folderId}"]`);
+                            if (folderElement) {
+                                folderElement.querySelector('.folder-name').textContent = newName;
+                            }
+                            alert('Carpeta renombrada correctamente.');
+                        } else {
+                            alert('Error al renombrar la carpeta: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            function deleteFolder(folderId) {
+                fetch(`/delete_folder/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ 'folder_id': folderId })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Eliminar la carpeta de la interfaz
+                            const folderElement = document.querySelector(`.folder[data-folder-id="${folderId}"]`);
+                            if (folderElement) {
+                                folderElement.remove();
+                            }
+                            alert('Carpeta eliminada correctamente.');
+                            location.reload();
+                        } else {
+                            alert('Error al eliminar la carpeta: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
             const patientContainer = document.querySelector('.unassigned-patients-container');
             if (patientContainer) {
                 patientContainer.addEventListener('dragstart', function (event) {

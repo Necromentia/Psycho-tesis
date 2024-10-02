@@ -78,26 +78,6 @@ def home(request):
                 patient.save()
 
             return redirect('home')
-        elif 'edit_folder' in request.POST:
-            folder_id = request.POST.get('folder_id')
-            folder_name = request.POST.get('folder_name')
-            patient_id = request.POST.get('patient_id')
-
-            # Editar el nombre de la carpeta
-            folder = Folder.objects.get(id=folder_id, user=request.user)
-            if folder_name:
-                folder.name = folder_name
-                folder.save()
-
-            # Agregar paciente a la carpeta
-            if patient_id:
-                patient = Patient.objects.get(id=patient_id)
-                patient.folder = folder
-                patient.save()
-
-        elif 'delete_folder' in request.POST:
-            folder_id = request.POST.get('folder_id')
-            Folder.objects.filter(id=folder_id, user=request.user).delete()
 
         return redirect('home')
 
@@ -227,7 +207,38 @@ def create_folder(request):
         return JsonResponse({'success': True, 'folder': {'id': folder.id, 'name': folder.name}})
 
     return JsonResponse({'success': False, 'error': 'Solicitud inválida'})
+@login_required
+def rename_folder(request):
+    data = json.loads(request.body)
+    folder_id = data.get('folder_id')
+    new_name = data.get('new_name')
 
+    if not new_name:
+        return JsonResponse({'success': False, 'error': 'El nuevo nombre es obligatorio.'})
+
+    try:
+        folder = Folder.objects.get(id=folder_id, user=request.user)
+        if folder.name == 'Papelera':
+            return JsonResponse({'success': False, 'error': 'No puedes renombrar la carpeta Papelera.'})
+        folder.name = new_name
+        folder.save()
+        return JsonResponse({'success': True})
+    except Folder.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'La carpeta no existe.'})
+
+@login_required
+def delete_folder(request):
+    data = json.loads(request.body)
+    folder_id = data.get('folder_id')
+
+    try:
+        folder = Folder.objects.get(id=folder_id, user=request.user)
+        if folder.name == 'Papelera':
+            return JsonResponse({'success': False, 'error': 'No puedes eliminar la carpeta Papelera.'})
+        folder.delete()
+        return JsonResponse({'success': True})
+    except Folder.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'La carpeta no existe.'})
 @csrf_exempt 
 def get_response(request):
     if request.method == 'POST':
@@ -450,17 +461,6 @@ def restore_patient_from_trash(request):
         except Patient.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Paciente no encontrado'})
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
-
-@login_required
-def delete_folder(request):
-    if request.method == 'POST':
-        folder_id = request.POST.get('folder_id')
-        folder = get_object_or_404(Folder, id=folder_id, user=request.user)
-        if folder.is_fixed:
-            return JsonResponse({'success': False, 'error': 'No se puede eliminar esta carpeta'})
-        folder.delete()
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 
 @login_required
