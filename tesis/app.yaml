@@ -1,6 +1,9 @@
 runtime: python39  # O la versión que estés usando
 
 entrypoint: bash -c "python manage.py migrate && gunicorn -b :$PORT tesis.wsgi"
+automatic_scaling:
+  min_instances: 0
+  max_instances: 2
 
 
 handlers:
