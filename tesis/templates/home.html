@@ -732,7 +732,6 @@
         </div>
 
         <div class="folders-container">
-            {% if folders %}
             <div class="folders">
                 <div class="folder" data-folder-id="{{ trash_folder.id }}">
                     <div class="folder-icon">
@@ -752,7 +751,6 @@
                     <img src="{% static 'images/new-folder.png' %}" alt="Agregar Carpeta">
                 </div>
             </div>
-            {% endif %}
         </div>
         <div class="unassigned-patients-container">
             <h3>Pacientes sin carpeta:</h3>
@@ -789,25 +787,6 @@
 
     </div>
 
-    <div id="actionModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Gestión de Carpetas</h2>
-            <button id="openCreateFolderModal" class="modal-button">Crear Carpeta</button>
-        </div>
-    </div>
-    <div id="createFolderModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Crear nueva carpeta</h2>
-            <form id="create-folder-form" method="POST">
-                {% csrf_token %}
-                <label for="folder_name">Nombre de la nueva carpeta:</label>
-                <input type="text" id="folder_name" name="folder_name" required>
-                <button type="submit" name="create_folder">Crear carpeta</button>
-            </form>
-        </div>
-    </div>
     <ul id="folderContextMenu" class="context-menu">
         <li id="renameFolderOption">Renombrar</li>
         <li id="deleteFolderOption">Eliminar</li>
@@ -1681,9 +1660,11 @@
                     .catch(error => console.error('Error:', error));
             }
             const addFolderButton = document.querySelector('.add-folder-button');
-            addFolderButton.addEventListener('click', function () {
-                openCreateFolderModal();
-            });
+            if (addFolderButton) {
+                addFolderButton.addEventListener('click', function () {
+                    openCreateFolderModal();
+                });
+            }
             function openCreateFolderModal() {
                 const folderName = prompt('Ingresa el nombre de la nueva carpeta:');
                 if (folderName && folderName.trim() !== '') {

@@ -4,32 +4,35 @@ from datetime import date
 
 
 class PatientForm(forms.ModelForm):
-    age = forms.IntegerField(label='Age', required=False, widget=forms.NumberInput(attrs={'readonly': 'readonly'}))
-
     class Meta:
         model = Patient
-        fields = ['first_name', 'last_name', 'birth_date', 'genre', 'rut', 'region', 'ciudad', 'comuna', 'centro_de_salud', 'age']
+        fields = [
+            'first_name', 
+            'last_name', 
+            'rut', 
+            'phone', 
+            'birth_date', 
+            'genre', 
+            'region', 
+            'ciudad', 
+            'comuna', 
+            'centro_de_salud', 
+            'email', 
+            'address'
+        ]
         widgets = {
-            'first_name': forms.TextInput(attrs={'id': 'id_first_name'}),
-            'last_name': forms.TextInput(attrs={'id': 'id_last_name'}),
-            'birth_date': forms.DateInput(attrs={'type': 'date', 'id': 'id_birth_date'}),
-            'genre': forms.TextInput(attrs={'id': 'id_genre'}),
-            'rut': forms.TextInput(attrs={'id': 'id_rut'}),
-            'region': forms.TextInput(attrs={'id': 'id_region'}),
-            'ciudad': forms.TextInput(attrs={'id': 'id_ciudad'}),
-            'comuna': forms.TextInput(attrs={'id': 'id_comuna'}),
-            'centro_de_salud': forms.TextInput(attrs={'id': 'id_centro_de_salud'}),
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'genre': forms.Select(choices=[
+                ('Masculino', 'Masculino'),
+                ('Femenino', 'Femenino'),
+                ('Otro', 'Otro'),
+            ]),
+            'rut': forms.TextInput(attrs={'placeholder': 'Ej. 12.345.678-9'}),
+            'phone': forms.TextInput(attrs={'placeholder': 'Ej. +56912345678'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'ejemplo@correo.com'}),
+            'address': forms.TextInput(attrs={'placeholder': 'Ej. Calle Falsa 123'}),
+            # Agrega más widgets según necesidad
         }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        birth_date = cleaned_data.get('birth_date')
-        if birth_date:
-            today = date.today()
-            age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
-            cleaned_data['age'] = age
-        return cleaned_data
-
 class MedicalHistoryForm(forms.ModelForm):
     class Meta:
         model = MedicalHistory

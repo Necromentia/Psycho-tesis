@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Pacientes</title>
     <style>
+        /* Estilos existentes */
         body {
             margin: 0;
             padding: 0;
@@ -16,7 +17,6 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            /* Cambiado de height a min-height */
         }
 
         .container {
@@ -57,7 +57,8 @@
         input[type="number"],
         select,
         textarea,
-        input[type="date"] {
+        input[type="date"],
+        input[type="email"] {
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -128,6 +129,12 @@
         .back-button:hover {
             background-color: #181f2b;
         }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 
@@ -144,6 +151,7 @@
         <form method="post">
             {% csrf_token %}
 
+            <!-- Información Personal -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="id_first_name">Nombre:</label>
@@ -152,6 +160,17 @@
                 <div class="form-group">
                     <label for="id_last_name">Apellido:</label>
                     {{ patient_form.last_name }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_rut">Rut:</label>
+                    {{ patient_form.rut }}
+                </div>
+                <div class="form-group">
+                    <label for="id_phone">Número de Teléfono:</label>
+                    {{ patient_form.phone }}
                 </div>
             </div>
 
@@ -166,13 +185,48 @@
                 </div>
             </div>
 
+            <!-- Dirección -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_region">Región:</label>
+                    {{ patient_form.region }}
+                </div>
+                <div class="form-group">
+                    <label for="id_ciudad">Ciudad:</label>
+                    {{ patient_form.ciudad }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_comuna">Comuna:</label>
+                    {{ patient_form.comuna }}
+                </div>
+                <div class="form-group">
+                    <label for="id_centro_de_salud">Centro de Salud:</label>
+                    {{ patient_form.centro_de_salud }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_email">Correo Electrónico:</label>
+                    {{ patient_form.email }}
+                </div>
+                <div class="form-group">
+                    <label for="id_address">Dirección:</label>
+                    {{ patient_form.address }}
+                </div>
+            </div>
+
+            <!-- Síntomas -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="id_physical_symptoms">Síntomas Físicos:</label>
                     {{ symptom_form.physical_symptoms }}
                 </div>
                 <div class="form-group">
-                    <label for="id_social_symptoms">Funcionamiento social:</label>
+                    <label for="id_social_symptoms">Funcionamiento Social:</label>
                     {{ symptom_form.social_symptoms }}
                 </div>
             </div>
@@ -188,6 +242,7 @@
                 </div>
             </div>
 
+            <!-- Historial Médico -->
             <div class="form-group-large">
                 <label for="id_clinical_history">Historial Médico:</label>
                 {{ medical_history_form.clinical_history }}
@@ -203,25 +258,27 @@
                 {{ medical_history_form.personal_history }}
             </div>
 
+            <!-- Diagnóstico -->
             <div class="form-group-large">
-                <label for="id_diagnosis">Diagnóstico previo:</label>
+                <label for="id_diagnosis">Diagnóstico Previo:</label>
                 {{ diagnosis_form.diagnosis }}
             </div>
+
             <input type="hidden" id="action-input" name="action" value="register">
-    
+
             <div class="button-group">
                 <button type="submit" onclick="setAction('interact')" class="ai-button">Interactuar con IA</button>
-                <button type="submit" onclick="setAction('register')" class="register-button">Registrar paciente</button>
+                <button type="submit" onclick="setAction('register')" class="register-button">Registrar Paciente</button>
             </div>
         </form>
     </div>
-</body>
 
-<script>
-    function setAction(action) {
-        // Cambia el valor del campo oculto que lleva la acción
-        document.getElementById('action-input').value = action;
-    }
-</script>
+    <script>
+        function setAction(action) {
+            // Cambia el valor del campo oculto que lleva la acción
+            document.getElementById('action-input').value = action;
+        }
+    </script>
+</body>
 
 </html>

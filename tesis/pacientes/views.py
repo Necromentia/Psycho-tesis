@@ -23,7 +23,7 @@ from .forms import PatientForm, MedicalHistoryForm, SymptomForm, DiagnosisForm
 from .models import Patient, MedicalHistory, Symptom, Diagnosis, Folder
 import urllib.parse
 
-import ollama
+#import ollama
 
 
 def inicio(request):
@@ -244,14 +244,14 @@ def get_response(request):
     if request.method == 'POST':
         user_input = request.POST.get('user_input', '')
         print(f"User input: {user_input}")  # Verifica que se está recibiendo el input
+        
         try:
-            stream = ollama.chat(
-                model='tesis', 
-                messages=[{'role': 'user', 'content': user_input}],
-                stream=True,
-            )
+            print(f"Error al conectar con Ollama: {e}")  # Imprime cualquier error de conexión con la IA
+            bot_response = 'Lo siento, no puedo procesar tu solicitud en este momento.'
+
+            #stream = ollama.chat(model='tesis',messages=[{'role': 'user', 'content': user_input}],stream=True,)
             
-            bot_response = ''.join(chunk['message']['content'] for chunk in stream)
+            #bot_response = ''.join(chunk['message']['content'] for chunk in stream)
             print(f"Bot response: {bot_response}")  # Verifica que se está generando una respuesta válida
         
         except Exception as e:
@@ -321,16 +321,23 @@ def assign_patient_to_folder(request):
         except Folder.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Carpeta no encontrada'})
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
+@login_required
 def register_patient(request):
     error_message = None
 
     if request.method == 'POST':
+        action = request.POST.get('action', 'register')  # Obtener la acción del campo oculto
         patient_form = PatientForm(request.POST)
         medical_history_form = MedicalHistoryForm(request.POST)
         symptom_form = SymptomForm(request.POST)
         diagnosis_form = DiagnosisForm(request.POST)
         
-        if all([patient_form.is_valid(), medical_history_form.is_valid(), symptom_form.is_valid()]):
+        if all([
+            patient_form.is_valid(), 
+            medical_history_form.is_valid(), 
+            symptom_form.is_valid(), 
+            diagnosis_form.is_valid()
+        ]):
             patient = patient_form.save(commit=False)  # No guardar todavía para poder asignar más campos
             patient.assigned_user = request.user  # Asignar el usuario actual
             patient.last_view_at = timezone.now()  # Actualizar el campo last_view_at
@@ -348,8 +355,12 @@ def register_patient(request):
             diagnosis.patient = patient
             diagnosis.save()
 
-            # Redireccionar a la página de interacción con la IA
-            return redirect(reverse('chat') + f'?patient_id={patient.id}')
+            if action == 'interact':
+                # Redireccionar a la página de interacción con la IA
+                return redirect(reverse('chat') + f'?patient_id={patient.id}')
+            if action == 'register':
+                # Redireccionar a una página de éxito o la misma página con un mensaje
+                return redirect(reverse('home'))  # Ajusta según tu configuración
         else:
             error_message = "Hubo un error en el formulario. Por favor, revisa los campos e intenta nuevamente."
 

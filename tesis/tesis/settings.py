@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-2^i%8xu#=j-t=_w%ml3w%$*-r@4dg*e*aerwdh1z7vo(s5t%d9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['tesis-437402.rj.r.appspot.com','127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -53,7 +53,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'tesis.urls'
 LOGIN_REDIRECT_URL = '/'  # Redirección después de iniciar sesión
 LOGOUT_REDIRECT_URL = '/login/'  # Redirección después de cerrar sesión
 TEMPLATES = [
@@ -72,9 +71,38 @@ TEMPLATES = [
     },
 ]
 
+
+
+
+# Obtener las credenciales de la base de datos desde variables de entorno o secretos
+# Configuración de la base de datos
+# URLs y WSGI
+ROOT_URLCONF = 'tesis.urls'
 WSGI_APPLICATION = 'tesis.wsgi.application'
 
+# Configuración de la base de datos
 
+if os.getenv('GAE_APPLICATION', None):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'HOST': '/cloudsql/tesis-437402:southamerica-west1:proyecto-tesis',
+            'NAME': 'tesis',
+            'USER': 'db_tesis',
+            'PASSWORD': 'Samael98.',
+        }
+    }
+else:  
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'tesis',
+            'USER': 'db_tesis',
+            'PASSWORD': 'Samael98.',
+            'HOST': '127.0.0.1',
+            'PORT': '5433',
+        }
+    }
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -123,10 +151,3 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# En settings.py
-try:
-    from .local_settings import *
-except ImportError:
-    print("No se encontró 'local_settings.py', utilizando configuraciones predeterminadas.")
-    pass
