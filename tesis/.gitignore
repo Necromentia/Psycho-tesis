@@ -1,2 +1,3 @@
 # Archivos de configuración local sensibles
 /tesis/local_settings.py
+/tesis/.env
