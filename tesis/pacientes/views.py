@@ -59,7 +59,7 @@ def inicio(request):
 def home(request):
     trash_folder = Folder.objects.filter(user=request.user).get(is_fixed=True)
     folders = Folder.objects.filter(user=request.user).exclude(is_fixed=True)
-    unassigned_patients = Patient.objects.filter(folder__isnull=True)
+    unassigned_patients = Patient.objects.filter(assigned_user=request.user,folder__isnull=True)
     recent_patients = Patient.objects.filter(assigned_user=request.user, last_view_at__isnull=False).order_by('-last_view_at')[:10]
 
     if request.method == 'POST':
