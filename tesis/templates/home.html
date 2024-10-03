@@ -653,6 +653,23 @@
             background-color: #f1f1f1;
         }
 
+        .no-patients {
+            text-align: center;
+            color: #777;
+            margin-top: 50px;
+        }
+
+        .no-patients-message {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            /* Ajusta según tus necesidades */
+            font-size: 24px;
+            color: #555;
+            text-align: center;
+        }
+
 
         @media (max-width: 1200px) {
             .folders {
@@ -780,6 +797,9 @@
                         {% endif %}
                     </div>
                 </div>
+                {% endfor %}
+                {% empty %}
+                <li class="no-patients">No tienes pacientes sin carpetas.</li>
                 {% endfor %}
             </div>
         </div>
@@ -914,7 +934,7 @@
             </form>
         </div>
     </div>
- 
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
@@ -1537,104 +1557,109 @@
 
                 // Mostrar el nombre de la carpeta
                 const folderTitle = document.createElement('h2');
-                folderTitle.textContent = `${folderName}`;
+                folderTitle.textContent = `Carpeta: ${folderName}`;
                 mainContent.appendChild(folderTitle);
 
                 // Crear el contenedor de pacientes
                 const patientsGrid = document.createElement('div');
                 patientsGrid.classList.add('patients-grid');
 
-                // Generar las tarjetas de pacientes
-                patients.forEach(patient => {
-                    const patientCard = document.createElement('div');
-                    patientCard.classList.add('patient-card');
-                    patientCard.setAttribute('data-patient-id', patient.id);
-                    patientCard.addEventListener('click', function (event) {
-                        if (!event.target.classList.contains('view-button') &&
-                            !event.target.classList.contains('edit-button') &&
-                            !event.target.classList.contains('delete-button')) {
-                            if (folderName != 'Papelera') {
-                                window.location.href = `/chat?patient_id=${patient.id}`;
+                if (patients.length === 0) {
+                    // Crear un contenedor para el mensaje
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('no-patients-message');
+                    messageDiv.textContent = 'No hay pacientes en esta carpeta.';
+
+                    patientsGrid.appendChild(messageDiv);
+                } else {
+                    patients.forEach(patient => {
+                        const patientCard = document.createElement('div');
+                        patientCard.classList.add('patient-card');
+                        patientCard.setAttribute('data-patient-id', patient.id);
+                        patientCard.addEventListener('click', function (event) {
+                            if (!event.target.classList.contains('view-button') &&
+                                !event.target.classList.contains('edit-button') &&
+                                !event.target.classList.contains('delete-button')) {
+                                if (folderName != 'Papelera') {
+                                    window.location.href = `/chat?patient_id=${patient.id}`;
+                                }
                             }
+                        });
 
+                        // Imagen del paciente según el género
+                        const patientPhoto = document.createElement('div');
+                        patientPhoto.classList.add('patient-photo');
+                        const img = document.createElement('img');
+
+                        if (patient.genre === 'Masculino') {
+                            img.src = "{% static 'images/male-patient.png' %}";
+                        } else if (patient.genre === 'Femenino') {
+                            img.src = "{% static 'images/female-patient.png' %}";
+                        } else {
+                            img.src = "{% static 'images/default-patient.png' %}";
                         }
+                        patientPhoto.appendChild(img);
+                        patientCard.appendChild(patientPhoto);
+
+                        // Botones de acción
+                        const actionButtons = document.createElement('div');
+                        actionButtons.classList.add('action-buttons');
+
+                        const viewButton = document.createElement('button');
+                        viewButton.textContent = 'Ver';
+                        viewButton.classList.add('view-button');
+                        viewButton.addEventListener('click', function (event) {
+                            event.stopPropagation();
+                            viewPatient(patient.id);
+                        });
+                        actionButtons.appendChild(viewButton);
+
+                        if (folderName !== 'Papelera') {
+                            const editButton = document.createElement('button');
+                            editButton.textContent = 'Editar';
+                            editButton.classList.add('edit-button');
+                            editButton.addEventListener('click', function (event) {
+                                event.stopPropagation();
+                                editPatient(patient.id);
+                            });
+                            actionButtons.appendChild(editButton);
+                        }
+
+                        const deleteButton = document.createElement('button');
+                        if (folderName === 'Papelera') {
+                            deleteButton.textContent = 'Restaurar';
+                            deleteButton.classList.add('restore-button');
+                            deleteButton.addEventListener('click', function (event) {
+                                event.stopPropagation();
+                                restorePatient(patient.id);
+                            });
+                        } else {
+                            deleteButton.textContent = 'Eliminar';
+                            deleteButton.classList.add('delete-button');
+                            deleteButton.addEventListener('click', function (event) {
+                                event.stopPropagation();
+                                removePatientFromFolder(patient.id);
+                            });
+                        }
+                        actionButtons.appendChild(deleteButton);
+
+                        patientCard.appendChild(actionButtons);
+
+                        // Nombre del paciente
+                        const patientName = document.createElement('div');
+                        patientName.classList.add('patient-name');
+                        patientName.textContent = `${patient.first_name} ${patient.last_name}`;
+                        patientCard.appendChild(patientName);
+
+                        // Diagnóstico del paciente
+                        const patientDiagnosis = document.createElement('div');
+                        patientDiagnosis.classList.add('patient-diagnosis');
+                        patientDiagnosis.textContent = patient.diagnosis || 'Sin diagnóstico';
+                        patientCard.appendChild(patientDiagnosis);
+
+                        patientsGrid.appendChild(patientCard);
                     });
-
-                    // Imagen del paciente según el género
-                    const patientPhoto = document.createElement('div');
-                    patientPhoto.classList.add('patient-photo');
-                    const img = document.createElement('img');
-
-                    if (patient.genre === 'Masculino') {
-                        img.src = "{% static 'images/male-patient.png' %}";
-                    } else if (patient.genre === 'Femenino') {
-                        img.src = "{% static 'images/female-patient.png' %}";
-                    } else {
-                        img.src = "{% static 'images/default-patient.png' %}";
-                    }
-                    patientPhoto.appendChild(img);
-                    patientCard.appendChild(patientPhoto);
-
-                    // Botones de acción
-                    const actionButtons = document.createElement('div');
-                    actionButtons.classList.add('action-buttons');
-
-                    const viewButton = document.createElement('button');
-                    viewButton.textContent = 'Ver';
-                    viewButton.classList.add('view-button');
-                    viewButton.addEventListener('click', function (event) {
-                        event.stopPropagation();
-                        viewPatient(patient.id);
-                    });
-                    actionButtons.appendChild(viewButton);
-
-                    if (folderName !== 'Papelera') {
-                        const editButton = document.createElement('button');
-                        editButton.textContent = 'Editar';
-                        editButton.classList.add('edit-button');
-                        editButton.addEventListener('click', function (event) {
-                            event.stopPropagation();
-                            editPatient(patient.id);
-                        });
-                        actionButtons.appendChild(editButton);
-                    }
-
-                    const deleteButton = document.createElement('button');
-                    if (folderName === 'Papelera') {
-                        deleteButton.textContent = 'Restaurar';
-                        deleteButton.classList.add('restore-button');
-                        deleteButton.addEventListener('click', function (event) {
-                            event.stopPropagation();
-                            restorePatient(patient.id);
-                        });
-                    } else {
-                        deleteButton.textContent = 'Eliminar';
-                        deleteButton.classList.add('delete-button');
-                        deleteButton.addEventListener('click', function (event) {
-                            event.stopPropagation();
-                            removePatientFromFolder(patient.id);
-                        });
-                    }
-                    actionButtons.appendChild(deleteButton);
-
-
-                    patientCard.appendChild(actionButtons);
-
-                    // Nombre del paciente
-                    const patientName = document.createElement('div');
-                    patientName.classList.add('patient-name');
-                    patientName.textContent = `${patient.first_name} ${patient.last_name}`;
-                    patientCard.appendChild(patientName);
-
-                    // Diagnóstico del paciente
-                    const patientDiagnosis = document.createElement('div');
-                    patientDiagnosis.classList.add('patient-diagnosis');
-                    patientDiagnosis.textContent = patient.diagnosis || 'Sin diagnóstico';
-                    patientCard.appendChild(patientDiagnosis);
-
-                    patientsGrid.appendChild(patientCard);
-                });
-
+                }
                 mainContent.appendChild(patientsGrid);
             }
             function updateRecentPatients() {

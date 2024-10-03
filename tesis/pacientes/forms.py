@@ -2,8 +2,8 @@ from django import forms
 from .models import Patient, MedicalHistory, Symptom, Diagnosis
 from datetime import date
 
-
 class PatientForm(forms.ModelForm):
+    age = forms.IntegerField(label='Age', required=False, widget=forms.NumberInput(attrs={'readonly': 'readonly'}))
     class Meta:
         model = Patient
         fields = [
@@ -11,7 +11,8 @@ class PatientForm(forms.ModelForm):
             'last_name', 
             'rut', 
             'phone', 
-            'birth_date', 
+            'birth_date',
+            'age',
             'genre', 
             'region', 
             'ciudad', 
@@ -33,6 +34,15 @@ class PatientForm(forms.ModelForm):
             'address': forms.TextInput(attrs={'placeholder': 'Ej. Calle Falsa 123'}),
             # Agrega más widgets según necesidad
         }
+    def clean(self):
+        cleaned_data = super().clean()
+        birth_date = cleaned_data.get('birth_date')
+        if birth_date:
+            today = date.today()
+            age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+            cleaned_data['age'] = age
+        return cleaned_data
+    
 class MedicalHistoryForm(forms.ModelForm):
     class Meta:
         model = MedicalHistory
