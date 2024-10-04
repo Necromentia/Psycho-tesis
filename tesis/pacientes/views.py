@@ -24,7 +24,9 @@ from .models import Patient, MedicalHistory, Symptom, Diagnosis, Folder
 import urllib.parse
 
 #import ollama
+from django.views.decorators.cache import cache_page
 
+@cache_page(60 * 15)  # Cache por 15 minutos
 
 def inicio(request):
     login_error = None
@@ -377,6 +379,48 @@ def register_patient(request):
         'diagnosis_form': diagnosis_form,
         'error_message': error_message,
     })
+
+@login_required
+def edit_patient(request, patient_id):
+    patient = get_object_or_404(Patient, id=patient_id, assigned_user=request.user)
+    
+    if request.method == 'POST':
+        patient_form = PatientForm(request.POST, instance=patient)
+        medical_history_form = MedicalHistoryForm(request.POST, instance=patient.medicalhistory)
+        symptom_form = SymptomForm(request.POST, instance=patient.symptom)
+        diagnosis_form = DiagnosisForm(request.POST, instance=patient.diagnosis)
+        
+        if all([
+            patient_form.is_valid(), 
+            medical_history_form.is_valid(), 
+            symptom_form.is_valid(),
+            diagnosis_form.is_valid()
+        ]):
+            patient = patient_form.save(commit=False)
+            patient.last_view_at = timezone.now()
+            patient.save()
+            
+            medical_history_form.save()
+            symptom_form.save()
+            diagnosis_form.save()
+            
+            return redirect('home')  # Cambia según tu configuración
+        else:
+            messages.error(request, 'Hubo un error en el formulario. Por favor, revisa los campos e intenta nuevamente.')
+    else:
+        patient_form = PatientForm(instance=patient)
+        medical_history_form = MedicalHistoryForm(instance=patient.medicalhistory)
+        symptom_form = SymptomForm(instance=patient.symptom)
+        diagnosis_form = DiagnosisForm(instance=patient.diagnosis)
+    
+    return render(request, 'registrar_paciente.html', {
+        'patient_form': patient_form,
+        'medical_history_form': medical_history_form,
+        'symptom_form': symptom_form,
+        'diagnosis_form': diagnosis_form,
+        'is_edit': True,
+    })
+
 @login_required
 def get_recent_patients(request):
     #recent_patients = Patient.objects.filter(assigned_user=request.user, last_view_at__isnull=False).order_by('-last_view_at')[:10]
@@ -385,7 +429,7 @@ def get_recent_patients(request):
         {
             'id': patient.id,
             'name': f"{patient.first_name} {patient.last_name}",
-            'diagnosis': "Diagnóstico: " + patient.diagnosis_set.last().diagnosis if patient.diagnosis_set.exists() else 'Sin diagnóstico'
+            'diagnosis': "Diagnóstico: " + patient.diagnosis.diagnosis
         }
         for patient in recent_patients
     ]

@@ -227,6 +227,15 @@
             margin-bottom: 10px;
         }
 
+        /* Folders Styles */
+        .folders-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
         .folders {
             display: flex;
             flex-wrap: wrap;
@@ -239,24 +248,21 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
+            border-radius: 10px;
+            background-color: #fff;
+            padding: 10px;
+            position: relative;
         }
 
         .folder:hover {
             transform: translateY(-5px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-
-        }
-
-        .folder-icon {
-            width: 100%;
-            height: 120px;
-            margin-bottom: 10px;
         }
 
         .folder-icon img {
             width: 100px;
             height: 100px;
+            transition: transform 0.3s ease;
         }
 
         .folder-name {
@@ -264,6 +270,8 @@
             font-weight: bold;
             color: #333;
             word-wrap: break-word;
+            margin-top: 10px;
+            transition: color 0.3s ease;
         }
 
         .folder:hover .folder-icon img {
@@ -273,7 +281,23 @@
         .folder:hover .folder-name {
             color: #007bff;
         }
+        .add-folder-button img {
+            width: 80px;
+            height: 80px;
+        }
 
+        .folder.trash-folder .folder-icon img {
+            content: url("{% static 'images/trash-icon.png' %}");
+        }
+
+        .folder.trash-folder .folder-name {
+            color: #e74c3c;
+        }
+
+        .folder.trash-folder:hover {
+            transform: none;
+            box-shadow: none;
+        }
         .recent-patients-list {
             margin-top: 20px;
             padding: 0;
@@ -437,16 +461,27 @@
             background-color: #4e678b;
         }
 
-        .action-buttons .edit-button {
-            background-color: #10b981;
-        }
-
         .action-buttons .delete-button {
             background-color: #e74c3c;
         }
 
         .action-buttons .restore-button {
             background-color: #10b981;
+        }
+
+        .action-buttons .edit-button {
+            background-color: #10b981;
+            /* Color similar al botón original */
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            /* Asegura que el elemento se comporte como un botón */
         }
 
         .patient-details-container {
@@ -512,28 +547,6 @@
             /* Puedes agregar estilos adicionales aquí */
         }
 
-        .trash-folder {
-            margin-top: 20px;
-        }
-
-        .trash-folder button {
-            padding: 10px;
-            background-color: #e74c3c;
-            /* Color rojo para indicar "Papelera" */
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            color: #f0f4f8;
-            font-size: medium;
-            text-align: center;
-            margin-bottom: 10px;
-            width: 100%;
-        }
-
-        .trash-folder button:hover {
-            background-color: #c0392b;
-        }
-
         .patients-grid {
             display: flex;
             flex-wrap: wrap;
@@ -588,19 +601,6 @@
             margin-top: 5px;
         }
 
-        .folder.trash-folder .folder-icon img {
-            content: url("{% static 'images/trash-icon.png' %}");
-        }
-
-        .folder.trash-folder .folder-name {
-            color: #e74c3c;
-        }
-
-        .folder.trash-folder:hover {
-            transform: none;
-            box-shadow: none;
-        }
-
         .home-button {
             display: flex;
             align-items: center;
@@ -617,19 +617,6 @@
         .home-button:hover i {
             transform: scale(1.2);
             /* Efecto al pasar el cursor */
-        }
-
-        .add-folder-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            /* Aplica otros estilos que coincidan con tus carpetas */
-        }
-
-        .add-folder-button img {
-            width: 100px;
-            height: 100px;
         }
 
         /* Estilos para el menú contextual */
@@ -677,16 +664,16 @@
             }
 
             .folder {
-                width: 100px;
+                width: 140px;
             }
 
             .folder-icon img {
-                width: 50px;
-                height: 50px;
+                width: 80px;
+                height: 80px;
             }
 
             .folder-name {
-                font-size: 14px;
+                font-size: 16px;
             }
         }
 
@@ -696,16 +683,16 @@
             }
 
             .folder {
-                width: 80px;
+                width: 100;
             }
 
             .folder-icon img {
-                width: 40px;
-                height: 40px;
+                width: 60px;
+                height: 60px;
             }
 
             .folder-name {
-                font-size: 12px;
+                font-size: 14px;
             }
         }
     </style>
@@ -750,7 +737,7 @@
 
         <div class="folders-container">
             <div class="folders">
-                <div class="folder" data-folder-id="{{ trash_folder.id }}">
+                <div class="folder trash-folder" data-folder-id="{{ trash_folder.id }}">
                     <div class="folder-icon">
                         <img src="{% static 'images/trash-icon.png' %}" alt="Papelera">
                     </div>
@@ -764,8 +751,9 @@
                     <div class="folder-name">{{ folder.name }}</div>
                 </div>
                 {% endfor %}
-                <div class="folder add-folder-button">
+                <div class="folder add-folder-button" data-action="add-folder">
                     <img src="{% static 'images/new-folder.png' %}" alt="Agregar Carpeta">
+                    <div class="folder-name">Agregar Carpeta</div>
                 </div>
             </div>
         </div>
@@ -785,17 +773,16 @@
                     </div>
                     <div class="action-buttons">
                         <button class="view-button">Ver</button>
-                        <button class="edit-button">Editar</button>
+                        {% if patient.id %}
+                        <a href="{% url 'edit_patient' patient.id %}" class="edit-button">Editar</a>
+                        {% else %}
+                        <span class="edit-button disabled">Editar</span>
+                        {% endif %}
                         <button class="delete-button">Eliminar</button>
                     </div>
                     <div class="patient-name">{{ patient.first_name }} {{ patient.last_name }}</div>
-                    <div class="patient-diagnosis">
-                        {% if patient.diagnosis_set.exists %}
-                        {{ patient.diagnosis_set.last.diagnosis }}
-                        {% else %}
-                        Sin diagnóstico
-                        {% endif %}
-                    </div>
+                    <p>Diagnóstico: {{ patient.diagnosis.diagnosis }}</p>
+
                 </div>
                 {% empty %}
                 <li class="no-patients">No tienes pacientes sin carpetas.</li>
@@ -811,32 +798,6 @@
         <li id="deleteFolderOption">Eliminar</li>
     </ul>
 
-
-    <div id="editActionsModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Editar Carpeta</h2>
-            <form id="edit-folder-form" method="POST">
-                {% csrf_token %}
-                <input type="hidden" id="edit_folder_id_hidden" name="folder_id">
-
-                <label for="edit_folder_name">Nuevo nombre de la carpeta:</label>
-                <input type="text" id="edit_folder_name" name="folder_name" value="{{folder.name}}">
-
-
-                <label for="edit_patient_id">Agregar paciente:</label>
-                <select id="edit_patient_id" name="patient_id">
-                    <option value="">--Seleccionar paciente--</option>
-                    {% for patient in unassigned_patients %}
-                    <option value="{{ patient.id }}">{{ patient.first_name }} {{ patient.last_name }}</option>
-                    {% endfor %}
-                </select>
-
-                <button type="submit" name="edit_folder">Guardar cambios</button>
-                <button type="submit" name="delete_folder" id="delete-folder-button">Eliminar carpeta</button>
-            </form>
-        </div>
-    </div>
 
     <div id="viewPatientsModal" class="modal">
         <div class="viewPatients">
@@ -905,35 +866,6 @@
         </div>
     </div>
 
-    <div id="editPatientModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Editar Datos del Paciente</h2>
-            <form id="edit-patient-form" method="POST">
-                {% csrf_token %}
-                <input type="hidden" id="edit_patient_id" name="patient_id">
-
-                <label for="edit_first_name">Nombre:</label>
-                <input type="text" id="edit_first_name" name="first_name" required>
-
-                <label for="edit_last_name">Apellido:</label>
-                <input type="text" id="edit_last_name" name="last_name" required>
-
-                <label for="edit_birth_date">Fecha de Nacimiento:</label>
-                <input type="date" id="edit_birth_date" name="birth_date" required>
-
-                <label for="edit_genre">Género:</label>
-                <input type="text" id="edit_genre" name="genre" required>
-
-                <!-- Otros campos de paciente -->
-                <label for="edit_diagnosis">Hipotesis diagnóstica:</label>
-                <textarea id="edit_diagnosis" name="diagnosis"></textarea>
-
-                <button type="submit" id="save-patient-changes">Guardar Cambios</button>
-            </form>
-        </div>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
@@ -941,14 +873,11 @@
             const editButton = document.getElementById('edit-icon');
             const actionModal = document.getElementById('actionModal');
             const createFolderModal = document.getElementById('createFolderModal');
-            const editActionsModal = document.getElementById('editActionsModal');
             const viewPatientsModal = document.getElementById('viewPatientsModal');
             const viewPatientModal = document.getElementById('viewPatientModal'); // Añadir esta línea
-            const editPatientModal = document.getElementById('editPatientModal'); // Añadir esta línea
             const closeModalElements = document.getElementsByClassName('close');
 
             const openCreateFolderModalButton = document.getElementById('openCreateFolderModal');
-            const openEditActionsModalButton = document.getElementById('openEditActionsModal');
             const editFolderIdHidden = document.getElementById('edit_folder_id_hidden');
 
 
@@ -1194,7 +1123,7 @@
 
                 // Limpiar la lista de pacientes
                 patientList.innerHTML = '';
-
+                
                 // Hacer una solicitud AJAX para obtener los pacientes de la carpeta
                 fetch(`/get_patients_by_folder/${folderId}/`)
                     .then(response => response.json())
@@ -1231,7 +1160,11 @@
                                 <td>
                                     <div class="action-buttons">
                                         <button class="view-button">Ver</button>
-                                        <button class="edit-button">Editar</button>
+                                        {% if patient.id %}
+                                            <a href="{% url 'edit_patient' patient.id %}" class="edit-button">Editar</a>
+                                        {% else %}
+                                            <span class="edit-button disabled">Editar</span>
+                                        {% endif %}
                                         <button class="delete-button">Eliminar</button>
                                     </div>
                                 </td>
@@ -1328,7 +1261,11 @@
                     <td>
                         <div class="action-buttons">
                             <button class="view-button">Ver</button>
-                            <button class="edit-button">Editar</button>
+                            {% if patient.id %}
+                                <a href="{% url 'edit_patient' patient.id %}" class="edit-button">Editar</a>
+                            {% else %}
+                                <span class="edit-button disabled">Editar</span>
+                            {% endif %}
                             <button class="delete-button">Eliminar</button>
                         </div>
                     </td>
@@ -1385,51 +1322,6 @@
                     .catch(error => console.error('Error:', error));
             }
 
-            // Función para abrir el modal de editar paciente
-            function editPatient(patientId) {
-                fetch(`/get_patient/${patientId}/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('edit_patient_id').value = data.id;
-                        document.getElementById('edit_first_name').value = data.first_name;
-                        document.getElementById('edit_last_name').value = data.last_name;
-                        document.getElementById('edit_birth_date').value = data.birth_date;
-                        document.getElementById('edit_genre').value = data.genre;
-                        document.getElementById('edit_diagnosis').value = data.diagnosis || '';
-
-                        editPatientModal.style.display = 'block';
-                    })
-                    .catch(error => console.error('Error:', error));
-            }
-
-            // Manejar la edición y guardar los cambios del paciente
-            document.getElementById('edit-patient-form').addEventListener('submit', function (event) {
-                event.preventDefault();
-                const patientId = document.getElementById('edit_patient_id').value;
-                const formData = new FormData(this);
-
-                fetch(`/update_patient/${patientId}/`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                    }
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Paciente actualizado correctamente');
-                            editPatientModal.style.display = 'none';
-                            // Recargar la carpeta actual
-                            const folderId = document.querySelector('.folder.active').getAttribute('data-folder-id');
-                            openFolder(folderId, document.getElementById('folderName').textContent);
-                        } else {
-                            alert('Error al actualizar el paciente');
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-            });
-
             // Asignar eventos de clic a los botones de ver, editar y eliminar
             document.addEventListener('click', function (event) {
                 if (event.target.classList.contains('view-button')) {
@@ -1451,14 +1343,8 @@
                     // Aquí se asegura que cada modal específico se cierre
                     if (element.closest('.modal').id === 'viewPatientModal') {
                         viewPatientModal.style.display = 'none';
-                    } else if (element.closest('.modal').id === 'editPatientModal') {
-                        editPatientModal.style.display = 'none';
                     } else if (element.closest('.modal').id === 'actionModal') {
                         actionModal.style.display = 'none';
-                    } else if (element.closest('.modal').id === 'createFolderModal') {
-                        createFolderModal.style.display = 'none';
-                    } else if (element.closest('.modal').id === 'editActionsModal') {
-                        editActionsModal.style.display = 'none';
                     } else if (element.closest('.modal').id === 'viewPatientsModal') {
                         viewPatientsModal.style.display = 'none';
                     }
@@ -1471,14 +1357,8 @@
             window.addEventListener('click', function (event) {
                 if (event.target === viewPatientModal) {
                     viewPatientModal.style.display = 'none';
-                } else if (event.target === editPatientModal) {
-                    editPatientModal.style.display = 'none';
                 } else if (event.target === actionModal) {
                     actionModal.style.display = 'none';
-                } else if (event.target === createFolderModal) {
-                    createFolderModal.style.display = 'none';
-                } else if (event.target === editActionsModal) {
-                    editActionsModal.style.display = 'none';
                 } else if (event.target === viewPatientsModal) {
                     viewPatientsModal.style.display = 'none';
                 }
@@ -1697,7 +1577,9 @@
                     alert('Debe ingresar un nombre para la carpeta.');
                 }
             }
-
+            function editPatient(patientId) {
+                window.location.href = `/edit_patient/${patientId}/`;
+            }
             function createFolder(folderName) {
                 fetch('/create_folder/', {
                     method: 'POST',

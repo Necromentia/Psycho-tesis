@@ -1,9 +1,9 @@
+# models.py
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import date
-
 
 class Chat(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -14,7 +14,7 @@ class Message(models.Model):
     sender = models.CharField(max_length=255)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    
+
 class Folder(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
@@ -23,11 +23,9 @@ class Folder(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_fixed = models.BooleanField(default=False)  # Nuevo campo
 
-
     def __str__(self):
         return self.name
 
-    
 class Patient(models.Model):
     id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=100)
@@ -48,30 +46,27 @@ class Patient(models.Model):
     email = models.EmailField(null=True)
     address = models.CharField(max_length=255, null=True)
 
-    
     @property
     def age(self):
         today = date.today()
         return today.year - self.birth_date.year - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
-    
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
-
-
 class MedicalHistory(models.Model):
     id = models.AutoField(primary_key=True)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    patient = models.OneToOneField(Patient, on_delete=models.CASCADE, related_name='medicalhistory')
     personal_history = models.TextField()
     family_history = models.TextField()
     clinical_history = models.TextField()
 
     def __str__(self):
         return f"Historial clínico de {self.patient}"
-    
+
 class Symptom(models.Model):
     id = models.AutoField(primary_key=True)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    patient = models.OneToOneField(Patient, on_delete=models.CASCADE, related_name='symptom')
     emotional_symptoms = models.TextField()
     behavioral_symptoms = models.TextField()
     social_symptoms = models.TextField()
@@ -82,7 +77,7 @@ class Symptom(models.Model):
 
 class Diagnosis(models.Model):
     id = models.AutoField(primary_key=True)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    patient = models.OneToOneField(Patient, on_delete=models.CASCADE, related_name='diagnosis')
     diagnosis = models.CharField(max_length=255)
     details = models.TextField(null=True, blank=True)
     additional_diagnosis = models.TextField(null=True, blank=True)
@@ -91,4 +86,3 @@ class Diagnosis(models.Model):
 
     def __str__(self):
         return f"Diagnóstico de {self.patient}"
-

@@ -1,10 +1,14 @@
+<!-- registrar_paciente.html -->
+
+{% load widget_tweaks %}
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Pacientes</title>
+    <title>{% if is_edit %}Editar Paciente{% else %}Registrar Paciente{% endif %}</title>
+
     <style>
         /* Estilos existentes */
         body {
@@ -104,14 +108,20 @@
             background-color: #181f2b;
         }
 
-        .ai-button {
+        .ai-button{
             background-color: #4e678b;
         }
 
         .ai-button:hover {
             background-color: #181f2b;
         }
+        .submit-button {
+            background-color: #4e678b;
+        }
 
+        .submit-button:hover {
+            background-color: #181f2b;
+        }
         .back-button {
             background-color: #4e678b;
             color: white;
@@ -135,140 +145,302 @@
             text-align: center;
             margin-bottom: 15px;
         }
+
+        /* Estilos para mensajes de Django */
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Estilos para errores en campos específicos */
+        .errorlist {
+            color: red;
+            list-style: none;
+            padding-left: 0;
+            margin-top: 5px;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <a href="{% url 'home' %}" class="back-button">Volver</a>
-        <h1>Registro de Pacientes</h1>
-
-        <!-- Mostrar mensaje de error si existe -->
-        {% if error_message %}
-            <p class="error-message">{{ error_message }}</p>
-        {% endif %}
+        <h1>{% if is_edit %}Editar Paciente{% else %}Registrar Paciente{% endif %}</h1>
 
         <form method="post">
             {% csrf_token %}
 
             <!-- Información Personal -->
             <div class="form-row">
+
                 <div class="form-group">
-                    <label for="id_first_name">Nombre:</label>
-                    {{ patient_form.first_name }}
+                    <label for="{{ patient_form.first_name.id_for_label }}">Nombre:</label>
+                    {{ patient_form.first_name|add_class:"form-control" }}
+                    {% if patient_form.first_name.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.first_name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_last_name">Apellido:</label>
-                    {{ patient_form.last_name }}
+                    <label for="{{ patient_form.last_name.id_for_label }}">Apellido:</label>
+                    {{ patient_form.last_name|add_class:"form-control" }}
+                    {% if patient_form.last_name.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.last_name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ patient_form.rut.id_for_label }}">Rut:</label>
+                    {{ patient_form.rut|add_class:"form-control" }}
+                    {% if patient_form.rut.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.rut.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ patient_form.phone.id_for_label }}">Número de Teléfono:</label>
+                    {{ patient_form.phone|add_class:"form-control" }}
+                    {% if patient_form.phone.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.phone.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="id_rut">Rut:</label>
-                    {{ patient_form.rut }}
+                    <label for="{{ patient_form.birth_date.id_for_label }}">Fecha de Nacimiento:</label>
+                    {{ patient_form.birth_date|add_class:"form-control" }}
+                    {% if patient_form.birth_date.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.birth_date.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_phone">Número de Teléfono:</label>
-                    {{ patient_form.phone }}
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_birth_date">Fecha de Nacimiento:</label>
-                    {{ patient_form.birth_date }}
-                </div>
-                <div class="form-group">
-                    <label for="id_genre">Género:</label>
-                    {{ patient_form.genre }}
+                    <label for="{{ patient_form.genre.id_for_label }}">Género:</label>
+                    {{ patient_form.genre|add_class:"form-control" }}
+                    {% if patient_form.genre.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.genre.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             </div>
 
             <!-- Dirección -->
             <div class="form-row">
                 <div class="form-group">
-                    <label for="id_region">Región:</label>
-                    {{ patient_form.region }}
+                    <label for="{{ patient_form.region.id_for_label }}">Región:</label>
+                    {{ patient_form.region|add_class:"form-control" }}
+                    {% if patient_form.region.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.region.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_ciudad">Ciudad:</label>
-                    {{ patient_form.ciudad }}
+                    <label for="{{ patient_form.ciudad.id_for_label }}">Ciudad:</label>
+                    {{ patient_form.ciudad|add_class:"form-control" }}
+                    {% if patient_form.ciudad.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.ciudad.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="id_comuna">Comuna:</label>
-                    {{ patient_form.comuna }}
+                    <label for="{{ patient_form.comuna.id_for_label }}">Comuna:</label>
+                    {{ patient_form.comuna|add_class:"form-control" }}
+                    {% if patient_form.comuna.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.comuna.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_centro_de_salud">Centro de Salud:</label>
-                    {{ patient_form.centro_de_salud }}
+                    <label for="{{ patient_form.centro_de_salud.id_for_label }}">Centro de Salud:</label>
+                    {{ patient_form.centro_de_salud|add_class:"form-control" }}
+                    {% if patient_form.centro_de_salud.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.centro_de_salud.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="id_email">Correo Electrónico:</label>
-                    {{ patient_form.email }}
+                    <label for="{{ patient_form.email.id_for_label }}">Correo Electrónico:</label>
+                    {{ patient_form.email|add_class:"form-control" }}
+                    {% if patient_form.email.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.email.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_address">Dirección:</label>
-                    {{ patient_form.address }}
+                    <label for="{{ patient_form.address.id_for_label }}">Dirección:</label>
+                    {{ patient_form.address|add_class:"form-control" }}
+                    {% if patient_form.address.errors %}
+                        <ul class="errorlist">
+                            {% for error in patient_form.address.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             </div>
 
             <!-- Síntomas -->
             <div class="form-row">
                 <div class="form-group">
-                    <label for="id_physical_symptoms">Síntomas Físicos:</label>
-                    {{ symptom_form.physical_symptoms }}
+                    <label for="{{ symptom_form.physical_symptoms.id_for_label }}">Síntomas Físicos:</label>
+                    {{ symptom_form.physical_symptoms|add_class:"form-control" }}
+                    {% if symptom_form.physical_symptoms.errors %}
+                        <ul class="errorlist">
+                            {% for error in symptom_form.physical_symptoms.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_social_symptoms">Funcionamiento Social:</label>
-                    {{ symptom_form.social_symptoms }}
+                    <label for="{{ symptom_form.social_symptoms.id_for_label }}">Funcionamiento Social:</label>
+                    {{ symptom_form.social_symptoms|add_class:"form-control" }}
+                    {% if symptom_form.social_symptoms.errors %}
+                        <ul class="errorlist">
+                            {% for error in symptom_form.social_symptoms.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="id_emotional_symptoms">Síntomas Emocionales:</label>
-                    {{ symptom_form.emotional_symptoms }}
+                    <label for="{{ symptom_form.emotional_symptoms.id_for_label }}">Síntomas Emocionales:</label>
+                    {{ symptom_form.emotional_symptoms|add_class:"form-control" }}
+                    {% if symptom_form.emotional_symptoms.errors %}
+                        <ul class="errorlist">
+                            {% for error in symptom_form.emotional_symptoms.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_behavioral_symptoms">Comportamiento:</label>
-                    {{ symptom_form.behavioral_symptoms }}
+                    <label for="{{ symptom_form.behavioral_symptoms.id_for_label }}">Comportamiento:</label>
+                    {{ symptom_form.behavioral_symptoms|add_class:"form-control" }}
+                    {% if symptom_form.behavioral_symptoms.errors %}
+                        <ul class="errorlist">
+                            {% for error in symptom_form.behavioral_symptoms.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             </div>
 
             <!-- Historial Médico -->
             <div class="form-group-large">
-                <label for="id_clinical_history">Historial Médico:</label>
-                {{ medical_history_form.clinical_history }}
+                <label for="{{ medical_history_form.clinical_history.id_for_label }}">Historial Clínico:</label>
+                {{ medical_history_form.clinical_history|add_class:"form-control" }}
+                {% if medical_history_form.clinical_history.errors %}
+                    <ul class="errorlist">
+                        {% for error in medical_history_form.clinical_history.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
 
             <div class="form-group-large">
-                <label for="id_family_history">Historial Familiar:</label>
-                {{ medical_history_form.family_history }}
+                <label for="{{ medical_history_form.family_history.id_for_label }}">Historial Familiar:</label>
+                {{ medical_history_form.family_history|add_class:"form-control" }}
+                {% if medical_history_form.family_history.errors %}
+                    <ul class="errorlist">
+                        {% for error in medical_history_form.family_history.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
 
             <div class="form-group-large">
-                <label for="id_personal_history">Historial Personal:</label>
-                {{ medical_history_form.personal_history }}
+                <label for="{{ medical_history_form.personal_history.id_for_label }}">Historial Personal:</label>
+                {{ medical_history_form.personal_history|add_class:"form-control" }}
+                {% if medical_history_form.personal_history.errors %}
+                    <ul class="errorlist">
+                        {% for error in medical_history_form.personal_history.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
 
             <!-- Diagnóstico -->
             <div class="form-group-large">
-                <label for="id_diagnosis">Diagnóstico Previo:</label>
-                {{ diagnosis_form.diagnosis }}
+                <label for="{{ diagnosis_form.diagnosis.id_for_label }}">Diagnóstico Previo:</label>
+                {{ diagnosis_form.diagnosis|add_class:"form-control" }}
+                {% if diagnosis_form.diagnosis.errors %}
+                    <ul class="errorlist">
+                        {% for error in diagnosis_form.diagnosis.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
 
             <input type="hidden" id="action-input" name="action" value="register">
 
             <div class="button-group">
                 <button type="submit" onclick="setAction('interact')" class="ai-button">Interactuar con IA</button>
-                <button type="submit" onclick="setAction('register')" class="register-button">Registrar Paciente</button>
+                <button type="submit" onclick="setAction('register')" class="submit-button">{% if is_edit %}Actualizar{% else %}Registrar{% endif %}</button>
             </div>
         </form>
     </div>
