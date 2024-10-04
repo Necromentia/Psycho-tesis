@@ -25,7 +25,7 @@ urlpatterns = [
     path('get_trash_folder_id/', views.get_trash_folder_id, name='get_trash_folder_id'),
     path('chat/', views.chat_view, name='chat'),
     path('assign_patient_to_folder/', views.assign_patient_to_folder, name='assign_patient_to_folder'),
-
+    path('user_settings/<int:user_id>/',views.user_settings,name='user_settings'),
     path('get_response/', views.get_response, name='get_response'),
     path('logout/', views.user_logout, name='logout'),
   

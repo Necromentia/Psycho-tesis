@@ -420,7 +420,9 @@ def edit_patient(request, patient_id):
         'diagnosis_form': diagnosis_form,
         'is_edit': True,
     })
-
+@login_required
+def user_settings(request,user_id):
+    pass
 @login_required
 def get_recent_patients(request):
     #recent_patients = Patient.objects.filter(assigned_user=request.user, last_view_at__isnull=False).order_by('-last_view_at')[:10]
