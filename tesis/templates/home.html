@@ -13,7 +13,6 @@
             font-family: 'Arial', sans-serif;
             display: flex;
             height: 100vh;
-            overflow: hidden;
             background-color: #f0f4f8;
         }
 
@@ -122,6 +121,8 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
+            /* Permitir que el contenido se desplace si excede la altura */
+            overflow-y: auto;
         }
 
         .search-bar {
@@ -281,6 +282,7 @@
         .folder:hover .folder-name {
             color: #007bff;
         }
+
         .add-folder-button img {
             width: 80px;
             height: 80px;
@@ -298,6 +300,7 @@
             transform: none;
             box-shadow: none;
         }
+
         .recent-patients-list {
             margin-top: 20px;
             padding: 0;
@@ -342,16 +345,6 @@
             border-radius: 10px;
         }
 
-        .viewPatients {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 50%;
-            /* Aumenta el tamaño del modal para que se vea mejor */
-            border-radius: 10px;
-
-        }
 
         .viewPatient {
             background-color: #fefefe;
@@ -781,7 +774,7 @@
                         <button class="delete-button">Eliminar</button>
                     </div>
                     <div class="patient-name">{{ patient.first_name }} {{ patient.last_name }}</div>
-                    <p>Diagnóstico: {{ patient.diagnosis.diagnosis }}</p>
+                    <div class="patient-diagnosis">Diagnóstico: {{ patient.diagnosis.diagnosis }}</div>
 
                 </div>
                 {% empty %}
@@ -797,29 +790,6 @@
         <li id="renameFolderOption">Renombrar</li>
         <li id="deleteFolderOption">Eliminar</li>
     </ul>
-
-
-    <div id="viewPatientsModal" class="modal">
-        <div class="viewPatients">
-            <span class="close">&times;</span>
-            <h2>Pacientes en la Carpeta: <span id="folderName"></span></h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre Completo</th>
-                        <th>Género</th>
-                        <th>Fecha de Nacimiento</th>
-                        <th>Hipotesis diagnóstica</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="patientList">
-                    <!-- Aquí se insertarán los pacientes dinámicamente -->
-                </tbody>
-            </table>
-        </div>
-    </div>
 
     <div id="viewPatientModal" class="modal">
         <div class="viewPatient">
@@ -1123,7 +1093,7 @@
 
                 // Limpiar la lista de pacientes
                 patientList.innerHTML = '';
-                
+
                 // Hacer una solicitud AJAX para obtener los pacientes de la carpeta
                 fetch(`/get_patients_by_folder/${folderId}/`)
                     .then(response => response.json())
@@ -1533,7 +1503,7 @@
                         // Diagnóstico del paciente
                         const patientDiagnosis = document.createElement('div');
                         patientDiagnosis.classList.add('patient-diagnosis');
-                        patientDiagnosis.textContent = patient.diagnosis || 'Sin diagnóstico';
+                        patientDiagnosis.textContent = `Diagnóstico: ${patient.diagnosis}` || 'Sin diagnóstico';
                         patientCard.appendChild(patientDiagnosis);
 
                         patientsGrid.appendChild(patientCard);

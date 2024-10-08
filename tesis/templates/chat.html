@@ -493,34 +493,54 @@
 
         .modal {
             display: none;
-            /* Hidden by default */
             position: fixed;
-            /* Stay in place */
             z-index: 1;
-            /* Sit on top */
             left: 0;
             top: 0;
             width: 100%;
-            /* Full width */
             height: 100%;
-            /* Full height */
             overflow: auto;
-            /* Enable scroll if needed */
             background-color: rgb(0, 0, 0);
-            /* Fallback color */
             background-color: rgba(0, 0, 0, 0.4);
-            /* Black w/ opacity */
+            padding-top: 60px;
         }
+        .patient-details-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+
+        .patient-details-container .section-title {
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+        }
+
+        .patient-details-container div {
+            margin-bottom: 10px;
+        }
+
+        .patient-details-container strong {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
 
         .modal-content {
             background-color: #fefefe;
-            margin: 15% auto;
-            /* 15% from the top and centered */
+            margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 80%;
-            /* Could be more or less, depending on screen size */
+            width: 20%;
+            /* Aumenta el tamaño del modal para que se vea mejor */
+            border-radius: 10px;
         }
+
 
         .close {
             color: #aaa;
@@ -569,6 +589,36 @@
             margin-top: 20px;
             border-bottom: 2px solid #ccc;
             padding-bottom: 5px;
+        }
+        
+        .edit_patient {
+            padding: 10px 20px;
+            margin-top: 15px;
+            margin-right: 10px;
+            background-color: #4e678b;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            float: right;
+        }
+        .viewPatient {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 40%;
+            /* Aumenta el tamaño del modal para que se vea mejor */
+            border-radius: 10px;
+
+        }
+        .viewPatient h1 {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .edit_patient:hover {
+            background-color: #3b4d66;
         }
         /* Media Queries para Responsividad */
         @media (max-width: 768px) {
@@ -712,8 +762,8 @@
         <div id="viewPatientModal" class="modal">
             <div class="viewPatient">
                 <span class="close">&times;</span>
-                <button id="downloadPdfButton" class="pdf-button">Editar datos paciente</button>
-                <h2>Datos del Paciente</h2>
+                <button id="edit-patient-button" class="edit_patient">Editar datos</button>
+                <h1>Datos del Paciente</h1>
 
 
                 <div class="patient-details-container" id="patient-details">
@@ -900,7 +950,9 @@
 
                         // Configurar el enlace del botón de editar
                         if (editPatientButton) {
-                            editPatientButton.href = `/editar-paciente/${patientId}/`; // Ajusta la URL según tu configuración
+                            editPatientButton.onclick = function () {
+                                window.location.href = `/edit_patient/${patientId}/`;
+                            }
                         }
 
                         // Abrir el modal
@@ -1018,8 +1070,6 @@
                         });
                 });
             }
-
-
             // Función para actualizar pacientes recientes
             function updateRecentPatients() {
                 fetch('/get_recent_patients/')

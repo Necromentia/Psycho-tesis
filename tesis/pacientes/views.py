@@ -23,7 +23,7 @@ from .forms import PatientForm, MedicalHistoryForm, SymptomForm, DiagnosisForm
 from .models import Patient, MedicalHistory, Symptom, Diagnosis, Folder
 import urllib.parse
 
-#import ollama
+import ollama
 from django.views.decorators.cache import cache_page
 
 @cache_page(60 * 15)  # Cache por 15 minutos
@@ -248,12 +248,10 @@ def get_response(request):
         print(f"User input: {user_input}")  # Verifica que se está recibiendo el input
         
         try:
-            print(f"Error al conectar con Ollama: {e}")  # Imprime cualquier error de conexión con la IA
-            bot_response = 'Lo siento, no puedo procesar tu solicitud en este momento.'
 
-            #stream = ollama.chat(model='tesis',messages=[{'role': 'user', 'content': user_input}],stream=True,)
+            stream = ollama.chat(model='tesis',messages=[{'role': 'user', 'content': user_input}],stream=True,)
             
-            #bot_response = ''.join(chunk['message']['content'] for chunk in stream)
+            bot_response = ''.join(chunk['message']['content'] for chunk in stream)
             print(f"Bot response: {bot_response}")  # Verifica que se está generando una respuesta válida
         
         except Exception as e:
@@ -356,7 +354,6 @@ def register_patient(request):
             diagnosis = diagnosis_form.save(commit=False)
             diagnosis.patient = patient
             diagnosis.save()
-
             if action == 'interact':
                 # Redireccionar a la página de interacción con la IA
                 return redirect(reverse('chat') + f'?patient_id={patient.id}')
@@ -385,6 +382,7 @@ def edit_patient(request, patient_id):
     patient = get_object_or_404(Patient, id=patient_id, assigned_user=request.user)
     
     if request.method == 'POST':
+        action = request.POST.get('action', 'register')  # Obtener la acción del campo oculto
         patient_form = PatientForm(request.POST, instance=patient)
         medical_history_form = MedicalHistoryForm(request.POST, instance=patient.medicalhistory)
         symptom_form = SymptomForm(request.POST, instance=patient.symptom)
@@ -404,7 +402,12 @@ def edit_patient(request, patient_id):
             symptom_form.save()
             diagnosis_form.save()
             
-            return redirect('home')  # Cambia según tu configuración
+            if action == 'interact':
+                # Redireccionar a la página de interacción con la IA
+                return redirect(reverse('chat') + f'?patient_id={patient.id}')
+            if action == 'register':
+                # Redireccionar a una página de éxito o la misma página con un mensaje
+                return redirect(reverse('home'))  # Ajusta según tu configuración
         else:
             messages.error(request, 'Hubo un error en el formulario. Por favor, revisa los campos e intenta nuevamente.')
     else:

@@ -34,7 +34,6 @@ ALLOWED_HOSTS = ['tesis-437402.rj.r.appspot.com','127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
-    'widget_tweaks',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

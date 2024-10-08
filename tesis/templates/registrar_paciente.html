@@ -1,6 +1,5 @@
 <!-- registrar_paciente.html -->
 
-{% load widget_tweaks %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -187,7 +186,7 @@
 
                 <div class="form-group">
                     <label for="{{ patient_form.first_name.id_for_label }}">Nombre:</label>
-                    {{ patient_form.first_name|add_class:"form-control" }}
+                    {{ patient_form.first_name }}
                     {% if patient_form.first_name.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.first_name.errors %}
@@ -198,7 +197,7 @@
                 </div>
                 <div class="form-group">
                     <label for="{{ patient_form.last_name.id_for_label }}">Apellido:</label>
-                    {{ patient_form.last_name|add_class:"form-control" }}
+                    {{ patient_form.last_name }}
                     {% if patient_form.last_name.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.last_name.errors %}
@@ -212,7 +211,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="{{ patient_form.rut.id_for_label }}">Rut:</label>
-                    {{ patient_form.rut|add_class:"form-control" }}
+                    {{ patient_form.rut }}
                     {% if patient_form.rut.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.rut.errors %}
@@ -223,7 +222,7 @@
                 </div>
                 <div class="form-group">
                     <label for="{{ patient_form.phone.id_for_label }}">Número de Teléfono:</label>
-                    {{ patient_form.phone|add_class:"form-control" }}
+                    {{ patient_form.phone }}
                     {% if patient_form.phone.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.phone.errors %}
@@ -237,7 +236,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="{{ patient_form.birth_date.id_for_label }}">Fecha de Nacimiento:</label>
-                    {{ patient_form.birth_date|add_class:"form-control" }}
+                    {{ patient_form.birth_date }}
                     {% if patient_form.birth_date.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.birth_date.errors %}
@@ -248,7 +247,7 @@
                 </div>
                 <div class="form-group">
                     <label for="{{ patient_form.genre.id_for_label }}">Género:</label>
-                    {{ patient_form.genre|add_class:"form-control" }}
+                    {{ patient_form.genre }}
                     {% if patient_form.genre.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.genre.errors %}
@@ -263,7 +262,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="{{ patient_form.region.id_for_label }}">Región:</label>
-                    {{ patient_form.region|add_class:"form-control" }}
+                    {{ patient_form.region }}
                     {% if patient_form.region.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.region.errors %}
@@ -274,7 +273,7 @@
                 </div>
                 <div class="form-group">
                     <label for="{{ patient_form.ciudad.id_for_label }}">Ciudad:</label>
-                    {{ patient_form.ciudad|add_class:"form-control" }}
+                    {{ patient_form.ciudad }}
                     {% if patient_form.ciudad.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.ciudad.errors %}
@@ -288,7 +287,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="{{ patient_form.comuna.id_for_label }}">Comuna:</label>
-                    {{ patient_form.comuna|add_class:"form-control" }}
+                    {{ patient_form.comuna }}
                     {% if patient_form.comuna.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.comuna.errors %}
@@ -299,7 +298,7 @@
                 </div>
                 <div class="form-group">
                     <label for="{{ patient_form.centro_de_salud.id_for_label }}">Centro de Salud:</label>
-                    {{ patient_form.centro_de_salud|add_class:"form-control" }}
+                    {{ patient_form.centro_de_salud }}
                     {% if patient_form.centro_de_salud.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.centro_de_salud.errors %}
@@ -313,7 +312,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="{{ patient_form.email.id_for_label }}">Correo Electrónico:</label>
-                    {{ patient_form.email|add_class:"form-control" }}
+                    {{ patient_form.email }}
                     {% if patient_form.email.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.email.errors %}
@@ -324,7 +323,7 @@
                 </div>
                 <div class="form-group">
                     <label for="{{ patient_form.address.id_for_label }}">Dirección:</label>
-                    {{ patient_form.address|add_class:"form-control" }}
+                    {{ patient_form.address }}
                     {% if patient_form.address.errors %}
                         <ul class="errorlist">
                             {% for error in patient_form.address.errors %}
@@ -339,7 +338,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="{{ symptom_form.physical_symptoms.id_for_label }}">Síntomas Físicos:</label>
-                    {{ symptom_form.physical_symptoms|add_class:"form-control" }}
+                    {{ symptom_form.physical_symptoms }}
                     {% if symptom_form.physical_symptoms.errors %}
                         <ul class="errorlist">
                             {% for error in symptom_form.physical_symptoms.errors %}
@@ -350,7 +349,7 @@
                 </div>
                 <div class="form-group">
                     <label for="{{ symptom_form.social_symptoms.id_for_label }}">Funcionamiento Social:</label>
-                    {{ symptom_form.social_symptoms|add_class:"form-control" }}
+                    {{ symptom_form.social_symptoms }}
                     {% if symptom_form.social_symptoms.errors %}
                         <ul class="errorlist">
                             {% for error in symptom_form.social_symptoms.errors %}
@@ -364,7 +363,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="{{ symptom_form.emotional_symptoms.id_for_label }}">Síntomas Emocionales:</label>
-                    {{ symptom_form.emotional_symptoms|add_class:"form-control" }}
+                    {{ symptom_form.emotional_symptoms }}
                     {% if symptom_form.emotional_symptoms.errors %}
                         <ul class="errorlist">
                             {% for error in symptom_form.emotional_symptoms.errors %}
@@ -375,7 +374,7 @@
                 </div>
                 <div class="form-group">
                     <label for="{{ symptom_form.behavioral_symptoms.id_for_label }}">Comportamiento:</label>
-                    {{ symptom_form.behavioral_symptoms|add_class:"form-control" }}
+                    {{ symptom_form.behavioral_symptoms }}
                     {% if symptom_form.behavioral_symptoms.errors %}
                         <ul class="errorlist">
                             {% for error in symptom_form.behavioral_symptoms.errors %}
@@ -389,7 +388,7 @@
             <!-- Historial Médico -->
             <div class="form-group-large">
                 <label for="{{ medical_history_form.clinical_history.id_for_label }}">Historial Clínico:</label>
-                {{ medical_history_form.clinical_history|add_class:"form-control" }}
+                {{ medical_history_form.clinical_history }}
                 {% if medical_history_form.clinical_history.errors %}
                     <ul class="errorlist">
                         {% for error in medical_history_form.clinical_history.errors %}
@@ -401,7 +400,7 @@
 
             <div class="form-group-large">
                 <label for="{{ medical_history_form.family_history.id_for_label }}">Historial Familiar:</label>
-                {{ medical_history_form.family_history|add_class:"form-control" }}
+                {{ medical_history_form.family_history }}
                 {% if medical_history_form.family_history.errors %}
                     <ul class="errorlist">
                         {% for error in medical_history_form.family_history.errors %}
@@ -413,7 +412,7 @@
 
             <div class="form-group-large">
                 <label for="{{ medical_history_form.personal_history.id_for_label }}">Historial Personal:</label>
-                {{ medical_history_form.personal_history|add_class:"form-control" }}
+                {{ medical_history_form.personal_history }}
                 {% if medical_history_form.personal_history.errors %}
                     <ul class="errorlist">
                         {% for error in medical_history_form.personal_history.errors %}
@@ -426,7 +425,7 @@
             <!-- Diagnóstico -->
             <div class="form-group-large">
                 <label for="{{ diagnosis_form.diagnosis.id_for_label }}">Diagnóstico Previo:</label>
-                {{ diagnosis_form.diagnosis|add_class:"form-control" }}
+                {{ diagnosis_form.diagnosis }}
                 {% if diagnosis_form.diagnosis.errors %}
                     <ul class="errorlist">
                         {% for error in diagnosis_form.diagnosis.errors %}
