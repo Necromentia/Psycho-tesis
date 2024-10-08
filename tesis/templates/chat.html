@@ -504,6 +504,7 @@
             background-color: rgba(0, 0, 0, 0.4);
             padding-top: 60px;
         }
+
         .patient-details-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -590,7 +591,7 @@
             border-bottom: 2px solid #ccc;
             padding-bottom: 5px;
         }
-        
+
         .edit_patient {
             padding: 10px 20px;
             margin-top: 15px;
@@ -602,6 +603,7 @@
             cursor: pointer;
             float: right;
         }
+
         .viewPatient {
             background-color: #fefefe;
             margin: 5% auto;
@@ -612,6 +614,7 @@
             border-radius: 10px;
 
         }
+
         .viewPatient h1 {
             text-align: left;
             margin-bottom: 20px;
@@ -620,6 +623,7 @@
         .edit_patient:hover {
             background-color: #3b4d66;
         }
+
         /* Media Queries para Responsividad */
         @media (max-width: 768px) {
             .left-sidebar {
@@ -754,8 +758,7 @@
 
                     <input type="hidden" name="patient_id" value="{{ patient_data.id }}">
                 </form>
-                <button id="save-diagnosis" data-patient-id="{{ patient.id }}">Guardar diagnóstico
-                    del paciente</button>
+                <button id="save-diagnosis" data-patient-id="{{ patient.id }}">Guardar diagnóstico</button>
                 <button id="view-patient-info" class="view-patient-info">Ver datos adicionales</button>
             </div>
         </div>
@@ -813,6 +816,8 @@
     <script src=" https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const getResponseURL = "{% url 'get_response' %}";
+
             // Seleccionar elementos del DOM
             const viewPatientModal = document.getElementById('viewPatientModal');
             const btn = document.getElementById('view-patient-info');
@@ -965,6 +970,7 @@
             }
 
             // Manejo del formulario de chat
+
             if (chatForm) {
                 chatForm.addEventListener('submit', function (event) {
                     event.preventDefault();
@@ -976,7 +982,7 @@
                     // Deshabilitar el botón de enviar
                     sendButton.disabled = true;
 
-                    fetch('{% url "get_response" %}', {
+                    fetch(getResponseURL, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1025,7 +1031,7 @@
                         });
                 });
             }
-            
+
 
             if (saveDiagnosisButton) {
                 saveDiagnosisButton.addEventListener('click', function (event) {

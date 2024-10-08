@@ -79,6 +79,9 @@ TEMPLATES = [
 # URLs y WSGI
 ROOT_URLCONF = 'tesis.urls'
 WSGI_APPLICATION = 'tesis.wsgi.application'
+# Configuración de Ollama
+OLLAMA_HOST = '35.198.15.252'  # Reemplaza con la IP o dominio de tu instancia de Ollama
+OLLAMA_PORT = '8080'         # Puerto donde Ollama está escuchando
 
 # Configuración de la base de datos
 

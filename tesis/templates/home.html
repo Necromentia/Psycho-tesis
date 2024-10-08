@@ -838,8 +838,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-
-
+            let currentFolderElement = null;
+            var editPatientUrlBase = "{% url 'edit_patient' 0 %}";
+            editPatientUrlBase = editPatientUrlBase.replace('0/', '');
             const editButton = document.getElementById('edit-icon');
             const actionModal = document.getElementById('actionModal');
             const createFolderModal = document.getElementById('createFolderModal');
@@ -1130,11 +1131,7 @@
                                 <td>
                                     <div class="action-buttons">
                                         <button class="view-button">Ver</button>
-                                        {% if patient.id %}
-                                            <a href="{% url 'edit_patient' patient.id %}" class="edit-button">Editar</a>
-                                        {% else %}
-                                            <span class="edit-button disabled">Editar</span>
-                                        {% endif %}
+                                        <a href="${editPatientUrlBase}${patient.id}/" class="edit-button">Editar</a>
                                         <button class="delete-button">Eliminar</button>
                                     </div>
                                 </td>
@@ -1231,11 +1228,7 @@
                     <td>
                         <div class="action-buttons">
                             <button class="view-button">Ver</button>
-                            {% if patient.id %}
-                                <a href="{% url 'edit_patient' patient.id %}" class="edit-button">Editar</a>
-                            {% else %}
-                                <span class="edit-button disabled">Editar</span>
-                            {% endif %}
+                            <a href="${editPatientUrlBase}${patient.id}/" class="edit-button">Editar</a>
                             <button class="delete-button">Eliminar</button>
                         </div>
                     </td>
@@ -1575,7 +1568,7 @@
             function closeContextMenu() {
                 const contextMenu = document.getElementById('folderContextMenu');
                 contextMenu.style.display = 'none';
-                window.currentFolderElement = null;
+                currentFolderElement = null;
             }
 
             // Añadir eventos de clic derecho a las carpetas
@@ -1615,7 +1608,7 @@
                     contextMenu.style.top = `${posY}px`;
 
                     // Guardar el folder actual en una variable global
-                    window.currentFolderElement = folder;
+                    currentFolderElement = folder;
                 });
             });
 
@@ -1628,7 +1621,7 @@
             });
             // Evento para la opción "Renombrar"
             document.getElementById('renameFolderOption').addEventListener('click', function () {
-                const folderElement = window.currentFolderElement;
+                const folderElement = currentFolderElement;
                 if (folderElement) {
                     const folderId = folderElement.getAttribute('data-folder-id');
                     const currentNameElement = folderElement.querySelector('.folder-name');
@@ -1643,7 +1636,7 @@
 
             // Evento para la opción "Eliminar"
             document.getElementById('deleteFolderOption').addEventListener('click', function () {
-                const folderElement = window.currentFolderElement;
+                const folderElement = currentFolderElement;
                 if (folderElement) {
                     const folderId = folderElement.getAttribute('data-folder-id');
                     if (confirm('¿Estás seguro de que deseas eliminar esta carpeta?')) {
@@ -1764,7 +1757,7 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRFToken': '{{ csrf_token }}'
+                                'X-CSRFToken': getCookie('csrftoken')
                             },
                             body: JSON.stringify({
                                 'patient_id': patientId,

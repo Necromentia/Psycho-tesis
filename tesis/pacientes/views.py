@@ -22,9 +22,11 @@ import json
 from .forms import PatientForm, MedicalHistoryForm, SymptomForm, DiagnosisForm
 from .models import Patient, MedicalHistory, Symptom, Diagnosis, Folder
 import urllib.parse
-
-import ollama
+import requests
+from ollama import Client
 from django.views.decorators.cache import cache_page
+from django.conf import settings
+
 
 @cache_page(60 * 15)  # Cache por 15 minutos
 
@@ -241,26 +243,54 @@ def delete_folder(request):
         return JsonResponse({'success': True})
     except Folder.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'La carpeta no existe.'})
-@csrf_exempt 
+import requests
+
+
+@csrf_exempt
 def get_response(request):
     if request.method == 'POST':
-        user_input = request.POST.get('user_input', '')
-        print(f"User input: {user_input}")  # Verifica que se está recibiendo el input
-        
         try:
+            data = json.loads(request.body)
+            user_input = data.get('user_input', '')
+            print(f"user_input: {user_input}")
 
-            stream = ollama.chat(model='tesis',messages=[{'role': 'user', 'content': user_input}],stream=True,)
-            
-            bot_response = ''.join(chunk['message']['content'] for chunk in stream)
-            print(f"Bot response: {bot_response}")  # Verifica que se está generando una respuesta válida
-        
-        except Exception as e:
-            print(f"Error al conectar con Ollama: {e}")  # Imprime cualquier error de conexión con la IA
-            bot_response = 'Lo siento, no puedo procesar tu solicitud en este momento.'
-        
-        return JsonResponse({'response': bot_response})
-    return JsonResponse({'response': 'Método no permitido'}, status=405)
+            # Llamar a la función de IA
+            bot_response = ollama_api(user_input)
+            print(f"Bot response: {bot_response}")
 
+            return JsonResponse({'response': bot_response})
+        except json.JSONDecodeError as e:
+            print(f"Error al decodificar JSON: {e}")
+            return JsonResponse({'response': 'Error en los datos enviados.'}, status=400)
+    else:
+        return JsonResponse({'response': 'Método no permitido'}, status=405)
+
+def ollama_api(user_input):
+    OLLAMA_API_URL = f"http://{settings.OLLAMA_HOST}:{settings.OLLAMA_PORT}/api/chat"
+
+    payload = {
+        'model': 'sujatowist/tesis',
+        'messages': [{'role': 'user', 'content': user_input}]
+    }
+
+    try:
+        # Realiza la solicitud a la API de Ollama con streaming habilitado
+        response = requests.post(OLLAMA_API_URL, json=payload, stream=True)
+        response.raise_for_status()
+
+        # Procesa la respuesta en streaming
+        bot_response = ''
+        for line in response.iter_lines():
+            if line:
+                data = json.loads(line.decode('utf-8'))
+                content = data.get('message', {}).get('content', '')
+                bot_response += content
+
+        return bot_response
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error al conectar con Ollama: {e}")
+        return 'Lo siento, no puedo procesar tu solicitud en este momento.'
 @login_required
 def chat_view(request):
     patient_id = request.GET.get('patient_id')
