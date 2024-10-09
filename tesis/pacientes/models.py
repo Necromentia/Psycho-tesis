@@ -5,6 +5,21 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import date
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+
+    # Campos adicionales
+    rut = models.CharField(max_length=12, unique=True, null=True)
+    superintendence_number = models.CharField(max_length=50, null=True)
+    region = models.CharField(max_length=100, null=True)
+    commune = models.CharField(max_length=100, null=True)
+    phone_number = models.CharField(max_length=20, null=True)
+    mineduc_registration_number = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return f"Perfil de {self.user.username}"
+
+
 class Chat(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)

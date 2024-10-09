@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar sesión</title>
     <style>
-        /* Tus estilos CSS aquí */
+        /* Estilos CSS */
         body {
             display: flex;
             align-items: center;
@@ -18,21 +16,17 @@
             flex-direction: column;
             margin: 0;
         }
-
         .main {
             background-color: #fff;
             border-radius: 15px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             padding: 10px 20px;
-            transition: transform 0.2s;
             width: 500px;
             text-align: center;
         }
-
         h1 {
             color: #4CAF50;
         }
-
         label {
             display: block;
             width: 100%;
@@ -42,7 +36,6 @@
             color: #555;
             font-weight: bold;
         }
-
         input {
             display: block;
             width: 100%;
@@ -52,7 +45,6 @@
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-
         button {
             padding: 15px;
             border-radius: 10px;
@@ -65,191 +57,71 @@
             width: 100%;
             font-size: 16px;
         }
-
         .wrap {
             display: flex;
             justify-content: center;
             align-items: center;
         }
-
         .links {
             margin-top: 15px;
             text-align: center;
         }
-
         .links a {
             color: #4CAF50;
             text-decoration: none;
             font-weight: bold;
         }
-
         .links a:hover {
             text-decoration: underline;
         }
-
-        /* Estilos para el modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.4);
-            padding-top: 60px;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 10px;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
         .error {
             color: red;
             font-weight: bold;
             margin-top: 10px;
         }
-
     </style>
 </head>
-
 <body>
     <div class="main">
         <h1>Psycho-Diagnosis</h1>
         {% if messages %}
-        <div>
-            {% for message in messages %}
-                {% if message.tags == 'error' %}
-                    <p style="color: red;">{{ message }}</p>
-                {% else %}
-                    <p style="color: green;">{{ message }}</p>
-                {% endif %}
-            {% endfor %}
-        </div>
-        {% endif %}        
+            <div>
+                {% for message in messages %}
+                    {% if message.tags == 'error' %}
+                        <p style="color: red;">{{ message }}</p>
+                    {% else %}
+                        <p style="color: green;">{{ message }}</p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
         <h3>Ingrese sus datos de usuario</h3>
         <form method="post" action="{% url 'inicio' %}">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
             <label for="username">
                 Nombre de usuario:
             </label>
             <input type="text" id="username" name="username" placeholder="Ingrese su nombre de usuario" required>
-
             <label for="password">
                 Contraseña:
             </label>
             <input type="password" id="password" name="password" placeholder="Ingrese su contraseña" required>
-
             <div class="wrap">
                 <button type="submit" name="login">
                     Iniciar sesión
                 </button>
             </div>
         </form>
-
         <div class="links">
             <p>¿Olvidaste tu contraseña?
                 <a href="#">Recuperar contraseña</a>
             </p>
             <p>¿No estás registrado?
-                <button id="registerBtn" style="background: none; border: none; color: #4CAF50; font-weight: bold; cursor: pointer;">Registrar usuario</button>
+                <!-- Enlace a la página de registro -->
+                <a href="{% url 'register' %}">Registrar usuario</a>
             </p>
         </div>
     </div>
-
-    <!-- Modal para registrar usuario -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Registrar un nuevo usuario</h3>
-            {% if register_error %}
-                <p class="error">{{ register_error }}</p>
-            {% endif %}
-            <form method="post" action="{% url 'inicio' %}">
-                {% csrf_token %}
-                <label for="new_username">
-                    Nombre de usuario:
-                </label>
-                <input type="text" id="new_username" name="new_username" placeholder="Ingrese su nombre de usuario" required>
-
-                <label for="new_password">
-                    Contraseña:
-                </label>
-                <input type="password" id="new_password" name="new_password" placeholder="Ingrese su contraseña" required>
-
-                <div class="wrap">
-                    <button type="submit" name="register">
-                        Crear cuenta
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <script>
-        // Obtener elementos del DOM
-        var modal = document.getElementById("registerModal");
-        var btn = document.getElementById("registerBtn");
-        var span = document.getElementsByClassName("close")[0];
-        var errorMessage = document.querySelector(".error");
-    
-        // Cuando el usuario haga clic en el botón, abrir el modal
-        btn.onclick = function() {
-            modal.style.display = "block";
-            if (errorMessage) {
-                errorMessage.textContent = ''; // Limpiar mensaje de error
-            }
-        }
-    
-        // Cuando el usuario haga clic en la X, cerrar el modal
-        span.onclick = function() {
-            modal.style.display = "none";
-            if (errorMessage) {
-                errorMessage.textContent = ''; // Limpiar mensaje de error
-            }
-        }
-    
-        // Cuando el usuario haga clic fuera del modal, cerrar el modal
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-                if (errorMessage) {
-                    errorMessage.textContent = ''; // Limpiar mensaje de error
-                }
-            }
-        }
-    
-        // Mostrar el modal si hay un error de registro
-        var registerError = "{{ register_error|escapejs }}";
-        if (registerError) {
-            window.onload = function() {
-                modal.style.display = "block";
-            }
-        }
-    </script>
-    
-    
 </body>
-
 </html>

@@ -5,7 +5,6 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.template.loader import render_to_string
-
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.urls import reverse
@@ -20,43 +19,67 @@ import json
 
 
 from .forms import PatientForm, MedicalHistoryForm, SymptomForm, DiagnosisForm
-from .models import Patient, MedicalHistory, Symptom, Diagnosis, Folder
+from .models import UserProfile,Patient, MedicalHistory, Symptom, Diagnosis, Folder
 import urllib.parse
 import requests
 from ollama import Client
 from django.views.decorators.cache import cache_page
 from django.conf import settings
+from .forms import UserForm, UserProfileForm,RegistrationForm
 
-
-@cache_page(60 * 15)  # Cache por 15 minutos
 
 def inicio(request):
-    login_error = None
-    register_error = None
-    
-    if request.method == 'POST':
-        if 'login' in request.POST:
-            # Proceso de inicio de sesión
-            username = request.POST['username']
-            password = request.POST['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('home')  
-            else:
-                messages.error(request, 'Nombre de usuario o contraseña incorrectos.')
-        
-        elif 'register' in request.POST:
-            username = request.POST['new_username']
-            password = request.POST['new_password']
-            if User.objects.filter(username=username).exists():
-                register_error = 'El nombre de usuario ya está en uso. Por favor, elige otro.'
-            else:
-                User.objects.create_user(username=username, password=password)
-                messages.success(request, 'Usuario creado satisfactoriamente. Por favor, inicia sesión.')
-                return redirect('inicio')  
+    if request.user.is_authenticated:
+        return redirect('home')  # Redirige a home si ya está autenticado
 
-    return render(request, 'index.html', {'register_error': register_error})
+    next_url = request.GET.get('next', '')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        next_url = request.POST.get('next', next_url)
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect(next_url or 'home')
+        else:
+            messages.error(request, 'Nombre de usuario o contraseña incorrectos.')
+    return render(request, 'index.html', {'next': next_url})
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            # Crear el usuario
+            user = User.objects.create_user(
+                username=form.cleaned_data['username'],
+                password=form.cleaned_data['password'],
+                email=form.cleaned_data['email'],
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name']
+            )
+
+            # Obtener el perfil de usuario creado por la señal
+            user_profile = user.userprofile  # Gracias a la señal, ya existe un UserProfile asociado
+
+            # Actualizar los campos del perfil
+            user_profile.rut = form.cleaned_data['rut']
+            user_profile.superintendence_number = form.cleaned_data['superintendence_number']
+            user_profile.region = form.cleaned_data['region']
+            user_profile.commune = form.cleaned_data['commune']
+            user_profile.phone_number = form.cleaned_data['phone_number']
+            user_profile.mineduc_registration_number = form.cleaned_data['mineduc_registration_number']
+
+            # Guardar el perfil actualizado
+            user_profile.save()
+
+            messages.success(request, 'Registro exitoso. Ahora puedes iniciar sesión.')
+            return redirect('inicio')  # Redirige a la página de inicio de sesión
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    else:
+        form = RegistrationForm()
+
+    return render(request, 'register.html', {'form': form})
 
 
 @login_required
@@ -92,7 +115,40 @@ def home(request):
         'recent_patients': recent_patients,
     })
 
+@login_required
+def user_settings(request):
+    user = request.user
+    try:
+        user_profile = user.userprofile
+    except UserProfile.DoesNotExist:
+        user_profile = UserProfile.objects.create(user=user)
 
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=user)
+        profile_form = UserProfileForm(request.POST, instance=user_profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user = user_form.save(commit=False)
+            new_password = user_form.cleaned_data.get('new_password')
+            if new_password:
+                user.set_password(new_password)
+            user.save()
+            profile_form.save()
+            messages.success(request, 'Tu perfil ha sido actualizado exitosamente.')
+            return redirect('user_settings')
+
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    else:
+        # Asegúrate de pasar las instancias para que los formularios se prellenen
+        user_form = UserForm(instance=user)
+        profile_form = UserProfileForm(instance=user_profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+    }
+    return render(request, 'user_settings.html', context)
 @login_required
 def get_patients_by_folder(request, folder_id):
     folder = Folder.objects.get(id=folder_id)
@@ -454,9 +510,6 @@ def edit_patient(request, patient_id):
         'is_edit': True,
     })
 @login_required
-def user_settings(request,user_id):
-    pass
-@login_required
 def get_recent_patients(request):
     #recent_patients = Patient.objects.filter(assigned_user=request.user, last_view_at__isnull=False).order_by('-last_view_at')[:10]
     recent_patients = Patient.objects.filter(assigned_user=request.user).exclude(folder__is_fixed=True).order_by('-last_view_at')[:5]
@@ -521,8 +574,7 @@ def get_trash_folder_id(request):
         return JsonResponse({'folder_id': trash_folder.id})
     except Folder.DoesNotExist:
         return JsonResponse({'folder_id': None})
-from django.views.decorators.csrf import csrf_exempt
-import json
+
 
 @csrf_exempt
 @login_required
@@ -668,6 +720,7 @@ def remove_patient_from_folder(request):
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
-def user_logout(request):
+def logout_view(request):
     logout(request)
+    messages.success(request, 'Has cerrado sesión correctamente.')
     return redirect('inicio') 

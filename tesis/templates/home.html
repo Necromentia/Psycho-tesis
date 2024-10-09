@@ -702,9 +702,15 @@
         <div>
 
             <div class="user-info-container">
-                <div class="user-info">Gustavo Arnaldi Lopez</div>
+                <div class="user-info">
+                    {% if user.get_full_name %}
+                        {{ user.get_full_name }}
+                    {% else %}
+                        {{ user.username }}
+                    {% endif %}
+                </div>
                 <div class="dropdown-content">
-                    <a href="#">Ajustes del usuario</a>
+                    <a href="{% url 'user_settings' %}">Ajustes del usuario</a>
                     <a href="{% url 'logout' %}">Cerrar sesión</a>
                 </div>
             </div>

@@ -4,10 +4,11 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    path('',views.inicio,name='inicio'),
+    path('inicio',views.inicio,name='inicio'),
     #path('register/', views.register, name='register'),
     #path('login/', views.inicio, name='login'),
-    path('home/', views.home, name='home'), 
+    path('home/', views.home, name='home'),
+    path('register/', views.register, name='register'), 
     path('create_folder/', views.create_folder, name='create_folder'),
     path('rename_folder/', views.rename_folder, name='rename_folder'),
     path('delete_folder/', views.delete_folder, name='delete_folder'),
@@ -25,8 +26,8 @@ urlpatterns = [
     path('get_trash_folder_id/', views.get_trash_folder_id, name='get_trash_folder_id'),
     path('chat/', views.chat_view, name='chat'),
     path('assign_patient_to_folder/', views.assign_patient_to_folder, name='assign_patient_to_folder'),
-    path('user_settings/<int:user_id>/',views.user_settings,name='user_settings'),
+    path('user_settings/',views.user_settings,name='user_settings'),
     path('get_response/', views.get_response, name='get_response'),
-    path('logout/', views.user_logout, name='logout'),
+    path('logout/', views.logout_view, name='logout'),
   
 ]

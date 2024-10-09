@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración de Usuario</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            background-color: #10b981;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .alert {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        form {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        form h3 {
+            margin-top: 0;
+            color: #10b981;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .form-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .form-group {
+            flex: 1 1 calc(50% - 20px);
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .errorlist {
+            color: red;
+            list-style-type: none;
+            padding: 0;
+            margin: 0 0 5px 0;
+        }
+        .field-error {
+            border-color: red;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        button[type="submit"],
+        .btn-home {
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+        button[type="submit"] {
+            background-color: #10b981;
+            color: white;
+        }
+        button[type="submit"]:hover {
+            background-color: #0f766e;
+        }
+        .btn-home {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-home:hover {
+            background-color: #0f766e;
+        }
+        @media (max-width: 768px) {
+            .form-group {
+                flex: 1 1 100%;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Configuración de Usuario</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <h3>Información de la cuenta</h3>
+            <div class="form-section">
+                {% for field in user_form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <ul class="errorlist">
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <h3>Información Personal</h3>
+            <div class="form-section">
+                {% for field in profile_form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <ul class="errorlist">
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="button-group">
+                <a href="{% url 'home' %}" class="btn-home">Inicio</a>
+                <button type="submit">Guardar Cambios</button>                
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -53,8 +53,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-LOGIN_REDIRECT_URL = '/'  # Redirección después de iniciar sesión
-LOGOUT_REDIRECT_URL = '/login/'  # Redirección después de cerrar sesión
+LOGIN_URL = '/inicio/'  # URL personalizada de inicio de sesión
+LOGIN_REDIRECT_URL = '/home/'  # URL de redirección después de iniciar sesión
+LOGOUT_REDIRECT_URL = '/inicio/' 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -82,7 +83,7 @@ WSGI_APPLICATION = 'tesis.wsgi.application'
 # Configuración de Ollama
 OLLAMA_HOST = '35.198.15.252'  # Reemplaza con la IP o dominio de tu instancia de Ollama
 OLLAMA_PORT = '8080'         # Puerto donde Ollama está escuchando
-
+CSRF_COOKIE_HTTPONLY = False
 # Configuración de la base de datos
 
 if os.getenv('GAE_APPLICATION', None):
